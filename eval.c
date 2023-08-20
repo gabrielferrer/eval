@@ -3,12 +3,196 @@
 #include <stdlib.h>
 #include "eval.h"
 
+#define PAGE_SIZE 1000
 #define INDEX(r, s) (r << 2) + s - 8
 
 combination_t temp_combination1;
 combination_t temp_combination2;
 hand_rank_result_t temp_result1;
 hand_rank_result_t temp_result2;
+
+bool adjust_indexes_with_5(int k[], int c)
+{
+	if (k[4] + 1 < c)
+	{
+		k[4]++;
+	}
+	else if (k[3] + 1 < k[4])
+	{
+		k[3]++;
+
+		if (k[3] + 1 < k[4])
+		{
+			k[4] = k[3] + 1;
+		}
+	}
+	else if (k[2] + 1 < k[3])
+	{
+		k[2]++;
+
+		if (k[2] + 1 < k[3])
+		{
+			k[3] = k[2] + 1;
+			k[4] = k[3] + 1;
+		}
+	}
+	else if (k[1] + 1 < k[2])
+	{
+		k[1]++;
+
+		if (k[1] + 1 < k[2])
+		{
+			k[2] = k[1] + 1;
+			k[3] = k[2] + 1;
+			k[4] = k[3] + 1;
+		}
+	}
+	else if (k[0] + 1 < k[1])
+	{
+		k[0]++;
+
+		if (k[0] + 1 < k[1])
+		{
+			k[1] = k[0] + 1;
+			k[2] = k[1] + 1;
+			k[3] = k[2] + 1;
+			k[4] = k[3] + 1;
+		}
+	}
+	else
+	{
+		return true;
+	}
+
+	return false;
+}
+
+bool adjust_indexes_with_4(int k[], int c)
+{
+	if (k[3] + 1 < c)
+	{
+		k[3]++;
+	}
+	else if (k[2] + 1 < k[3])
+	{
+		k[2]++;
+
+		if (k[2] + 1 < k[3])
+		{
+			k[3] = k[2] + 1;
+		}
+	}
+	else if (k[1] + 1 < k[2])
+	{
+		k[1]++;
+
+		if (k[1] + 1 < k[2])
+		{
+			k[2] = k[1] + 1;
+			k[3] = k[2] + 1;
+		}
+	}
+	else if (k[0] + 1 < k[1])
+	{
+		k[0]++;
+
+		if (k[0] + 1 < k[1])
+		{
+			k[1] = k[0] + 1;
+			k[2] = k[1] + 1;
+			k[3] = k[2] + 1;
+		}
+	}
+	else
+	{
+		return true;
+	}
+
+	return false;
+}
+
+bool adjust_indexes_with_3(int k[], int c)
+{
+	if (k[2] + 1 < c)
+	{
+		k[2]++;
+	}
+	else if (k[1] + 1 < k[2])
+	{
+		k[1]++;
+
+		if (k[1] + 1 < k[2])
+		{
+			k[2] = k[1] + 1;
+		}
+	}
+	else if (k[0] + 1 < k[1])
+	{
+		k[0]++;
+
+		if (k[0] + 1 < k[1])
+		{
+			k[1] = k[0] + 1;
+			k[2] = k[1] + 1;
+		}
+	}
+	else
+	{
+		return true;
+	}
+
+	return false;
+}
+
+bool adjust_indexes_with_2(int k[], int c)
+{
+	if (k[1] + 1 < c)
+	{
+		k[1]++;
+	}
+	else if (k[0] + 1 < k[1])
+	{
+		k[0]++;
+
+		if (k[0] + 1 < k[1])
+		{
+			k[1] = k[0] + 1;
+		}
+	}
+	else
+	{
+		return true;
+	}
+
+	return false;
+}
+
+bool adjust_indexes_with_1(int k[], int c)
+{
+	if (k[0] + 1 < c)
+	{
+		k[0]++;
+	}
+	else
+	{
+		return true;
+	}
+
+	return false;
+}
+
+void eval_with_players()
+{
+	// for (int i = 0; i < page_entries; i++)
+	// {
+		// for (int j = 0; j < eval_data->players; j++)
+		// {
+			// generate_player_combinations(eval_data->rules, &player_info[j]);
+		// }
+
+		// compare(combinations_page[i], );
+	// }
+}
 
 int compare_cards(const void * a, const void * b)
 {
@@ -436,16 +620,23 @@ int compare(combination_t combination1, combination_t combination2)
 	}
 }
 
-void eval(eval_t * eval_data, int count)
+bool eval(eval_t * eval_data, int count)
 {
-	card_t[DECK_SIZE] deck;
+	combination_t combinations_page[PAGE_SIZE];
+	card_t deck[DECK_SIZE];
 	int cards_count = DECK_SIZE;
-	eval_data->duplicated_cards = false;
+	eval_data->errors = 0;
 
 	// Initialize equities with invalid equities.
 	for (int i = 0; i < MAX_PLAYERS; i++)
 	{
-		eval_data[i] = -1;
+		eval_data->equities[i] = -1;
+	}
+
+	if (eval_data->board_cards_count < 0 || eval_data->board_cards_count == 1 || eval_data->board_cards_count == 2 || eval_data->board_cards_count > 5)
+	{
+		eval_data->errors |= INVALID_BOARD_CARDS_COUNT;
+		return false;
 	}
 
 	// Initialize deck.
@@ -459,16 +650,31 @@ void eval(eval_t * eval_data, int count)
 		}
 	}
 
-	// Remove dead cards from deck.
-	for (int i = 0; i < eval_data->dead_cards_count; i++)
+	for (int i = 0; i < eval_data->board_cards_count; i++)
 	{
-		int j = INDEX(eval_data->dead_cards_count[i].rank, eval_data->dead_cards_count[i].suit);
+		int j = INDEX(eval_data->board_cards[i].rank, eval_data->board_cards[i].suit);
 
 		// Check for duplicated cards.
 		if (deck[j].rank == NO_RANK)
 		{
-			eval_data->duplicated_cards = true;
-			return;
+			eval_data->errors |= DUPLICATED_CARD_FLAG;
+			return false;
+		}
+
+		deck[j].rank = NO_RANK;
+		deck[j].suit = NO_SUIT;
+		--cards_count;
+	}
+
+	// Remove dead cards from deck.
+	for (int i = 0; i < eval_data->dead_cards_count; i++)
+	{
+		int j = INDEX(eval_data->dead_cards[i].rank, eval_data->dead_cards[i].suit);
+
+		if (deck[j].rank == NO_RANK)
+		{
+			eval_data->errors |= DUPLICATED_CARD_FLAG;
+			return false;
 		}
 
 		deck[j].rank = NO_RANK;
@@ -485,14 +691,20 @@ void eval(eval_t * eval_data, int count)
 
 			if (deck[j].rank == NO_RANK)
 			{
-				eval_data->duplicated_cards = true;
-				return;
+				eval_data->errors |= DUPLICATED_CARD_FLAG;
+				return false;
 			}
 
 			deck[j].rank = NO_RANK;
 			deck[j].suit = NO_SUIT;
 			--cards_count;
 		}
+	}
+
+	if (cards_count < COMBINATION_SIZE)
+	{
+		eval_data->errors |= INSUFFICIENT_COMBINATION_CARDS;
+		return false;
 	}
 
 	card_t * cards = (card_t *)malloc(cards_count * sizeof(card_t));
@@ -507,11 +719,79 @@ void eval(eval_t * eval_data, int count)
 		}
 	}
 
-	
-	int k0 = 0, k1 = k0 + 1, k2 = k1 + 1, k3 = k2 + 1, k4 = k3 + 1;
+	int combination_indexes_count = COMBINATION_SIZE - eval_data->board_cards_count;
+	int page_entries;
 
-	while()
+	if (combination_indexes_count == 0)
 	{
-		
+		page_entries = 1;
+
+		for (int i = 0; i < COMBINATION_SIZE; i++)
+		{
+			combinations_page[0][i].rank = eval_data->board_cards[i].rank;
+			combinations_page[0][i].suit = eval_data->board_cards[i].suit;
+		}
+
+		eval_with_players();
 	}
+	else
+	{
+		int combination_indexes[COMBINATION_SIZE];
+		bool (*adjust_indexes)(int [], int) = combination_indexes_count == 5 ? &adjust_indexes_with_5
+			: combination_indexes_count == 4 ? &adjust_indexes_with_4
+			: combination_indexes_count == 3 ? &adjust_indexes_with_3
+			: combination_indexes_count == 2 ? &adjust_indexes_with_2
+			: combination_indexes_count == 1 ? &adjust_indexes_with_1
+			: NULL;
+		bool done = false;
+
+		// Initialize indexes to cards.
+		for (int i = 0; i < COMBINATION_SIZE; i++)
+		{
+			if (i < combination_indexes_count)
+			{
+				combination_indexes[i] = i;
+			}
+			else
+			{
+				combination_indexes[i] = -1;
+			}
+		}
+
+		do
+		{
+			page_entries = 0;
+
+			while (page_entries < PAGE_SIZE && !done)
+			{
+				// Generate combination.
+				for (int i = 0; i < COMBINATION_SIZE; i++)
+				{
+					if (i < eval_data->board_cards_count)
+					{
+						// Take board card if any.
+						combinations_page[page_entries][i].rank = eval_data->board_cards[i].rank;
+						combinations_page[page_entries][i].suit = eval_data->board_cards[i].suit;
+					}
+					else
+					{
+						// Take remaining deck card to complete combination.
+						combinations_page[page_entries][i].rank = cards[combination_indexes[i]].rank;
+						combinations_page[page_entries][i].rank = cards[combination_indexes[i]].suit;
+					}
+				}
+
+				page_entries++;
+
+				done = adjust_indexes(combination_indexes, cards_count);
+			}
+
+			eval_with_players();
+		}
+		while (!done);
+	}
+
+	free(cards);
+
+	return true;
 }

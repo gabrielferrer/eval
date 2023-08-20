@@ -2,9 +2,16 @@
 
 #define DECK_SIZE 52
 #define COMBINATION_SIZE 5
-#define MAX_HOLE_CARDS 6
 #define MAX_PLAYERS 10
 #define MAX_GROUPS 5
+
+// Eval error flags.
+
+#define DUPLICATED_CARD_FLAG 1
+#define INSUFFICIENT_COMBINATION_CARDS 2
+#define INVALID_BOARD_CARDS_COUNT 4
+
+typedef enum { HOLDEM, OMAHA, OMAHA5, OMAHA6 } rules_t;
 
 typedef enum { NO_SUIT, CLUBS, DIAMONDS, HEARTS, SPADES } suit_t;
 
@@ -16,16 +23,19 @@ typedef struct { rank_t rank; suit_t suit; } card_t;
 
 typedef card_t combination_t[COMBINATION_SIZE];
 
-typedef struct eval_t
+typedef struct
 {
+	rules_t rules;
 	int players;
+	int board_cards_count;
 	int hole_cards_count;
 	int dead_cards_count;
-	card_t[MAX_PLAYERS][MAX_HOLE_CARDS] hole_cards;
-	card_t[] dead_cards;
-	double[MAX_PLAYERS] equities;
-	bool duplicated_cards;
-}
+	card_t * board_cards;
+	card_t * hole_cards[MAX_PLAYERS];
+	card_t * dead_cards;
+	double equities[MAX_PLAYERS];
+	int errors;
+} eval_t;
 
 typedef struct { rank_t rank; int count; } group_t;
 
@@ -53,4 +63,4 @@ void hand_rank(combination_t combination, hand_rank_result_t * result);
 
 int compare(combination_t combination1, combination_t combination2);
 
-void eval(eval_t * eval_data, int count);
+bool eval(eval_t * eval_data, int count);

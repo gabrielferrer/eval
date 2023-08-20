@@ -17,7 +17,7 @@ void hand_rank_test(char * combination_string, hand_rank_t hr)
 
 	hand_rank(combination, &result);
 
-	printf("Combination: %s. Expected: %s. Actual: %s\n", b, hand_rank_to_string(hr), hand_rank_to_string(result.hand_rank));
+	printf("Combination: %s. Expected: %s. Actual: %s\n", combination_string, hand_rank_to_string(hr), hand_rank_to_string(result.hand_rank));
 }
 
 void compare_test(char * combination_string1, char * combination_string2, int e)
@@ -33,13 +33,13 @@ void compare_test(char * combination_string1, char * combination_string2, int e)
 		return;
 	}
 
-	if (!string_to_combination(combination_combination2, combination2))
+	if (!string_to_combination(combination_string2, combination2))
 	{
-		printf("Invalid input: %s", combination_combination2);
+		printf("Invalid input: %s", combination_string2);
 		return;
 	}
 
-	printf("1st. combination: %s. 2nd. combination: %s. Expected: %d. Actual: %d\n", b1, b2, e, compare(combination1, combination2));
+	printf("1st. combination: %s. 2nd. combination: %s. Expected: %d. Actual: %d\n", combination_string1, combination_string2, e, compare(combination1, combination2));
 }
 
 int main()
