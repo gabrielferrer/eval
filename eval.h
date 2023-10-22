@@ -10,6 +10,7 @@
 #define DUPLICATED_CARD_FLAG 1
 #define INSUFFICIENT_COMBINATION_CARDS 2
 #define INVALID_BOARD_CARDS_COUNT 4
+#define INVALID_POKER_RULES 8
 
 typedef enum { HOLDEM, OMAHA, OMAHA5, OMAHA6 } rules_t;
 
@@ -20,6 +21,8 @@ typedef enum { NO_RANK, ONE, TWO, THREE, FOUR, FIVE, SIX, SEVEN, EIGHT, NINE, TE
 typedef enum { HIGH_CARD = 1, PAIR, TWO_PAIR, THREE_OF_A_KIND, STRAIGHT, FLUSH, FULL_HOUSE, FOUR_OF_A_KIND, STRAIGHT_FLUSH, ROYAL_FLUSH } hand_rank_t;
 
 typedef struct { rank_t rank; suit_t suit; } card_t;
+
+typedef struct{ double win_percent; double lose_percent; double tie_percent; } equity_t;
 
 typedef card_t combination_t[COMBINATION_SIZE];
 
@@ -33,7 +36,7 @@ typedef struct
 	card_t * board_cards;
 	card_t * hole_cards[MAX_PLAYERS];
 	card_t * dead_cards;
-	double equities[MAX_PLAYERS];
+	equity_t * equities;
 	int errors;
 } eval_t;
 
@@ -63,4 +66,4 @@ void hand_rank(combination_t combination, hand_rank_result_t * result);
 
 int compare(combination_t combination1, combination_t combination2);
 
-bool eval(eval_t * eval_data, int count);
+bool eval(eval_t * eval_data);

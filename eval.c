@@ -6,6 +6,14 @@
 #define PAGE_SIZE 1000
 #define INDEX(r, s) (r << 2) + s - 8
 
+typedef struct
+{
+	int combinations_count;
+	combination_t * combinations;
+	int wins;
+	int ties;
+} player_info_t;
+
 combination_t temp_combination1;
 combination_t temp_combination2;
 hand_rank_result_t temp_result1;
@@ -181,17 +189,81 @@ bool adjust_indexes_with_1(int k[], int c)
 	return false;
 }
 
-void eval_with_players()
-{
-	// for (int i = 0; i < page_entries; i++)
-	// {
-		// for (int j = 0; j < eval_data->players; j++)
-		// {
-			// generate_player_combinations(eval_data->rules, &player_info[j]);
-		// }
+/*
+	Returns how many combinations there are for the given poker rules.
 
-		// compare(combinations_page[i], );
-	// }
+	[Return]
+
+		The number of combinations.
+*/
+int get_player_combinations(rules_t rules)
+{
+	if (rules == HOLDEM)
+	{
+		// For Hold'em user can form 21 combinations total.
+		// Zero, one or two hole cards can be used combined with 5 cards from board.
+		// C(5, 0) + 2 * C(5, 1) + C(5, 2) = 1 + 2 * 5 + 10 = 21
+		return 21;
+	}
+
+	if (rules == OMAHA)
+	{
+		// For Omaha (4 hole cards) user can form combinations total.
+		// Two hole cards mandatory combined with 5 cards from board.
+		// C(4, 2) * C(5, 2) = 6 * 10 = 60
+		return 60;
+	}
+
+	if (rules == OMAHA5)
+	{
+		// For Omaha (5 hole cards) user can form combinations total.
+		// Two hole cards mandatory combined with 5 cards from board.
+		// C(5, 2) * C(5, 2) = 10 * 10 = 100
+		return 100;
+	}
+
+	if (rules == OMAHA6)
+	{
+		// For Omaha (6 hole cards) user can form combinations total.
+		// Two hole cards mandatory combined with 5 cards from board.
+		// C(6, 2) * C(5, 2) = 15 * 10 = 150
+		return 150;
+	}
+
+	return 0;
+}
+
+//void combine(card_t * source, card_t * destination, card_t * replacement, int replacement_count)
+//{	
+//}
+
+void generate_player_combinations(rules_t rules, combination_t board_cards, card_t * hole_cards, player_info_t * player_info)
+{
+	//int i = 0;
+
+	//if (rules == HOLDEM)
+	//{
+		// C(5, 0)
+	//	memcpy(player_info->combinations[i++], board_cards, sizeof(combination_t));
+		// 2 * C(5, 1)
+		//hole_cards[0]
+		//hole_cards[1]
+
+	//	return;
+	//}
+}
+
+void eval_with_players(eval_t * eval_data, player_info_t * players_info, combination_t * combinations_page, int page_entries)
+{
+	for (int i = 0; i < page_entries; i++)
+	{
+		for (int j = 0; j < eval_data->players; j++)
+		{
+			generate_player_combinations(eval_data->rules, combinations_page[i], eval_data->hole_cards[j], &players_info[j]);
+		}
+
+		//compare(combinations_page[i], );
+	}
 }
 
 int compare_cards(const void * a, const void * b)
@@ -620,17 +692,20 @@ int compare(combination_t combination1, combination_t combination2)
 	}
 }
 
-bool eval(eval_t * eval_data, int count)
+bool eval(eval_t * eval_data)
 {
 	combination_t combinations_page[PAGE_SIZE];
 	card_t deck[DECK_SIZE];
+	player_info_t * players_info;
 	int cards_count = DECK_SIZE;
 	eval_data->errors = 0;
 
 	// Initialize equities with invalid equities.
 	for (int i = 0; i < MAX_PLAYERS; i++)
 	{
-		eval_data->equities[i] = -1;
+		eval_data->equities[i].win_percent = -1;
+		eval_data->equities[i].lose_percent = -1;
+		eval_data->equities[i].tie_percent = -1;
 	}
 
 	if (eval_data->board_cards_count < 0 || eval_data->board_cards_count == 1 || eval_data->board_cards_count == 2 || eval_data->board_cards_count > 5)
@@ -719,6 +794,21 @@ bool eval(eval_t * eval_data, int count)
 		}
 	}
 
+	int combinations = get_player_combinations(eval_data->rules);
+
+	if (combinations == 0)
+	{
+		eval_data->errors |= INVALID_POKER_RULES;
+		return false;
+	}
+
+	players_info = (player_info_t *)malloc(eval_data->players * sizeof(player_info_t));
+
+	for (int i = 0; i < eval_data->players; i++)
+	{
+		players_info[i].combinations = (combination_t *)malloc(combinations * sizeof(combination_t));
+	}
+
 	int combination_indexes_count = COMBINATION_SIZE - eval_data->board_cards_count;
 	int page_entries;
 
@@ -732,7 +822,7 @@ bool eval(eval_t * eval_data, int count)
 			combinations_page[0][i].suit = eval_data->board_cards[i].suit;
 		}
 
-		eval_with_players();
+		eval_with_players(eval_data, players_info, combinations_page, page_entries);
 	}
 	else
 	{
@@ -777,7 +867,7 @@ bool eval(eval_t * eval_data, int count)
 					{
 						// Take remaining deck card to complete combination.
 						combinations_page[page_entries][i].rank = cards[combination_indexes[i]].rank;
-						combinations_page[page_entries][i].rank = cards[combination_indexes[i]].suit;
+						combinations_page[page_entries][i].suit = cards[combination_indexes[i]].suit;
 					}
 				}
 
@@ -786,12 +876,28 @@ bool eval(eval_t * eval_data, int count)
 				done = adjust_indexes(combination_indexes, cards_count);
 			}
 
-			eval_with_players();
+			eval_with_players(eval_data, players_info, combinations_page, page_entries);
 		}
 		while (!done);
 	}
 
-	free(cards);
+	if (cards)
+	{
+		free(cards);
+	}
+	
+	if (players_info)
+	{
+		for (int i = 0; i < eval_data->players; i++)
+		{
+			if (players_info[i].combinations)
+			{
+				free(players_info[i].combinations);
+			}
+		}
+
+		free(players_info);
+	}
 
 	return true;
 }
