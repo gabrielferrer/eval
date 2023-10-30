@@ -1,5 +1,6 @@
 #include <stddef.h>
 #include <stdio.h>
+#include "enum.h"
 #include "eval.h"
 
 hand_rank_result_t r;
@@ -42,7 +43,7 @@ void compare_test(char * combination_string1, char * combination_string2, int e)
 	printf("1st. combination: %s. 2nd. combination: %s. Expected: %d. Actual: %d\n", combination_string1, combination_string2, e, compare(combination1, combination2));
 }
 
-int main()
+void rank_tests()
 {
 	hand_rank_test("9c4cKd2h6s", HIGH_CARD);
 	hand_rank_test("9c4cKdKh6s", PAIR);
@@ -55,7 +56,10 @@ int main()
 	hand_rank_test("KhKsKcJcKd", FOUR_OF_A_KIND);
 	hand_rank_test("7c4c3c6c5c", STRAIGHT_FLUSH);
 	hand_rank_test("JdAdQdKdTd", ROYAL_FLUSH);
+}
 
+void comparation_tests()
+{
 	// High card.
 	compare_test("7dKsAc2cJs", "JcAs7dKs6h", -1);
 	compare_test("8dKsAc2cJs", "JcAs7dKs6h", 1);
@@ -109,4 +113,35 @@ int main()
 
 	// Royal flush
 	compare_test("KhJhQhThAh", "JcQcTcAcKc", 0);
+}
+
+#define BUFFER_SIZE 10000
+
+void combination_tests()
+{
+	card_t deck[DECK_SIZE];
+
+	// Initialize deck.
+	for (suit_t s = CLUBS; s <= SPADES; s++)
+	{
+		for (rank_t r = TWO; r <= ACE; r++)
+		{
+			int i = (r << 2) + s - 8;
+			deck[i].rank = r;
+			deck[i].suit = s;
+		}
+	}
+
+	combination_info_t * info = initialize(deck, DECK_SIZE, COMBINATION_SIZE, BUFFER_SIZE);
+
+	combinations(info);
+
+	dispose(info);
+}
+
+int main()
+{
+	//rank_tests();
+	//comparation_tests();
+	combination_tests();
 }

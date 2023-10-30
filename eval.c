@@ -1,7 +1,8 @@
 #include <stddef.h>
 #include <string.h>
 #include <stdlib.h>
-#include "eval.h"
+#include "poker.h"
+#include "enum.h"
 
 #define PAGE_SIZE 1000
 #define INDEX(r, s) (r << 2) + s - 8
@@ -19,52 +20,52 @@ combination_t temp_combination2;
 hand_rank_result_t temp_result1;
 hand_rank_result_t temp_result2;
 
-bool adjust_indexes_with_5(int k[], int c)
+bool adjust_indexes_with_5(int x[], int c)
 {
-	if (k[4] + 1 < c)
+	if (x[4] + 1 < c)
 	{
-		k[4]++;
+		x[4]++;
 	}
-	else if (k[3] + 1 < k[4])
+	else if (x[3] + 1 < x[4])
 	{
-		k[3]++;
+		x[3]++;
 
-		if (k[3] + 1 < k[4])
+		if (x[3] + 1 < x[4])
 		{
-			k[4] = k[3] + 1;
+			x[4] = x[3] + 1;
 		}
 	}
-	else if (k[2] + 1 < k[3])
+	else if (x[2] + 1 < x[3])
 	{
-		k[2]++;
+		x[2]++;
 
-		if (k[2] + 1 < k[3])
+		if (x[2] + 1 < x[3])
 		{
-			k[3] = k[2] + 1;
-			k[4] = k[3] + 1;
+			x[3] = x[2] + 1;
+			x[4] = x[3] + 1;
 		}
 	}
-	else if (k[1] + 1 < k[2])
+	else if (x[1] + 1 < x[2])
 	{
-		k[1]++;
+		x[1]++;
 
-		if (k[1] + 1 < k[2])
+		if (x[1] + 1 < x[2])
 		{
-			k[2] = k[1] + 1;
-			k[3] = k[2] + 1;
-			k[4] = k[3] + 1;
+			x[2] = x[1] + 1;
+			x[3] = x[2] + 1;
+			x[4] = x[3] + 1;
 		}
 	}
-	else if (k[0] + 1 < k[1])
+	else if (x[0] + 1 < x[1])
 	{
-		k[0]++;
+		x[0]++;
 
-		if (k[0] + 1 < k[1])
+		if (x[0] + 1 < x[1])
 		{
-			k[1] = k[0] + 1;
-			k[2] = k[1] + 1;
-			k[3] = k[2] + 1;
-			k[4] = k[3] + 1;
+			x[1] = x[0] + 1;
+			x[2] = x[1] + 1;
+			x[3] = x[2] + 1;
+			x[4] = x[3] + 1;
 		}
 	}
 	else
@@ -75,40 +76,40 @@ bool adjust_indexes_with_5(int k[], int c)
 	return false;
 }
 
-bool adjust_indexes_with_4(int k[], int c)
+bool adjust_indexes_with_4(int x[], int c)
 {
-	if (k[3] + 1 < c)
+	if (x[3] + 1 < c)
 	{
-		k[3]++;
+		x[3]++;
 	}
-	else if (k[2] + 1 < k[3])
+	else if (x[2] + 1 < x[3])
 	{
-		k[2]++;
+		x[2]++;
 
-		if (k[2] + 1 < k[3])
+		if (x[2] + 1 < x[3])
 		{
-			k[3] = k[2] + 1;
+			x[3] = x[2] + 1;
 		}
 	}
-	else if (k[1] + 1 < k[2])
+	else if (x[1] + 1 < x[2])
 	{
-		k[1]++;
+		x[1]++;
 
-		if (k[1] + 1 < k[2])
+		if (x[1] + 1 < x[2])
 		{
-			k[2] = k[1] + 1;
-			k[3] = k[2] + 1;
+			x[2] = x[1] + 1;
+			x[3] = x[2] + 1;
 		}
 	}
-	else if (k[0] + 1 < k[1])
+	else if (x[0] + 1 < x[1])
 	{
-		k[0]++;
+		x[0]++;
 
-		if (k[0] + 1 < k[1])
+		if (x[0] + 1 < x[1])
 		{
-			k[1] = k[0] + 1;
-			k[2] = k[1] + 1;
-			k[3] = k[2] + 1;
+			x[1] = x[0] + 1;
+			x[2] = x[1] + 1;
+			x[3] = x[2] + 1;
 		}
 	}
 	else
@@ -119,52 +120,29 @@ bool adjust_indexes_with_4(int k[], int c)
 	return false;
 }
 
-bool adjust_indexes_with_3(int k[], int c)
+bool adjust_indexes_with_3(int x[], int c)
 {
-	if (k[2] + 1 < c)
+	if (x[2] + 1 < c)
 	{
-		k[2]++;
+		x[2]++;
 	}
-	else if (k[1] + 1 < k[2])
+	else if (x[1] + 1 < x[2])
 	{
-		k[1]++;
+		x[1]++;
 
-		if (k[1] + 1 < k[2])
+		if (x[1] + 1 < x[2])
 		{
-			k[2] = k[1] + 1;
+			x[2] = x[1] + 1;
 		}
 	}
-	else if (k[0] + 1 < k[1])
+	else if (x[0] + 1 < x[1])
 	{
-		k[0]++;
+		x[0]++;
 
-		if (k[0] + 1 < k[1])
+		if (x[0] + 1 < x[1])
 		{
-			k[1] = k[0] + 1;
-			k[2] = k[1] + 1;
-		}
-	}
-	else
-	{
-		return true;
-	}
-
-	return false;
-}
-
-bool adjust_indexes_with_2(int k[], int c)
-{
-	if (k[1] + 1 < c)
-	{
-		k[1]++;
-	}
-	else if (k[0] + 1 < k[1])
-	{
-		k[0]++;
-
-		if (k[0] + 1 < k[1])
-		{
-			k[1] = k[0] + 1;
+			x[1] = x[0] + 1;
+			x[2] = x[1] + 1;
 		}
 	}
 	else
@@ -175,11 +153,34 @@ bool adjust_indexes_with_2(int k[], int c)
 	return false;
 }
 
-bool adjust_indexes_with_1(int k[], int c)
+bool adjust_indexes_with_2(int x[], int c)
 {
-	if (k[0] + 1 < c)
+	if (x[1] + 1 < c)
 	{
-		k[0]++;
+		x[1]++;
+	}
+	else if (x[0] + 1 < x[1])
+	{
+		x[0]++;
+
+		if (x[0] + 1 < x[1])
+		{
+			x[1] = x[0] + 1;
+		}
+	}
+	else
+	{
+		return true;
+	}
+
+	return false;
+}
+
+bool adjust_indexes_with_1(int x[], int c)
+{
+	if (x[0] + 1 < c)
+	{
+		x[0]++;
 	}
 	else
 	{
@@ -192,7 +193,7 @@ bool adjust_indexes_with_1(int k[], int c)
 /*
 	Returns how many combinations there are for the given poker rules.
 
-	[Return]
+	[Returns]
 
 		The number of combinations.
 */
@@ -287,7 +288,7 @@ int compare_cards(const void * a, const void * b)
 /*
 	Compare a set of cards.
 
-	[Return]
+	[Returns]
 
 		-1, if first card is ranked below second card.
 		0, if both cards are ranked equal.
@@ -437,7 +438,7 @@ char * hand_rank_to_string(hand_rank_t hand_rank)
 /*
 	Calculate a given combination's rank.
 
-	[Return]
+	[Returns]
 
 		Struct with information about the hand rank.
 */
@@ -572,7 +573,7 @@ void hand_rank(combination_t combination, hand_rank_result_t * result)
 /*
 	Compare to combinations.
 
-	[Return]
+	[Returns]
 
 		-1, if first combination is ranked below second combination.
 		0, if both combinations are ranked equal.
