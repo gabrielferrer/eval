@@ -1,6 +1,7 @@
+#include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-#include "poker.h"
+#include "enum.h"
 
 bool next(int x[], int k, int c, int i)
 {
@@ -51,6 +52,7 @@ combination_info_t * initialize(card_t * set, int set_size, int combination_size
 	info->combination_size = combination_size;
 	info->indexes = (int *)malloc(info->combination_size);
 	info->combination_buffer = (card_t *)malloc(combination_size * sizeof(card_t) * buffer_size);
+	info->buffer_size = buffer_size;
 	info->current_combination = (card_t *)malloc(combination_size * sizeof(card_t));
 
 	return info;
@@ -83,7 +85,7 @@ void dispose(combination_info_t * info)
 
 bool combinations(combination_info_t * info)
 {
-	int size = info->combination_size * sizeof(card_t);
+	int combination_bytes = info->combination_size * sizeof(card_t);
 
 	// Initialize indexes to point to first elements.
 	for (int i = 0; i < info->combination_size; i++)
@@ -92,21 +94,22 @@ bool combinations(combination_info_t * info)
 	}
 
 	bool done;
-	int dp = 0;
-	int info->combination_count = 0;
+	card_t * buffer_offset = info->combination_buffer;
+	info->combination_count = 0;
 
 	do
 	{
 		// Prepare current combination.
 		for (int i = 0; i < info->combination_size; i++)
 		{
-			combination[i] = info->set[info->indexes[i]];
+			info->current_combination[i].rank = info->set[info->indexes[i]].rank;
+			info->current_combination[i].suit = info->set[info->indexes[i]].suit;
 		}
 
 		// Copy combination to buffer.
-		memcpy(info->combination_buffer[dp], combination, size);
+		memcpy(buffer_offset, info->current_combination, combination_bytes);
 		// Adjust destination buffer index.
-		dp += size;
+		buffer_offset += info->combination_size;
 		info->combination_count++;
 		// Adjust combination indexes for next combination.
 		done = adjust(info->indexes, info->combination_size, info->set_size);
