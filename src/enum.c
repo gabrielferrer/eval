@@ -14,11 +14,11 @@ bool next(int x[], int k, int c, int i)
 	{
 		x[i]++;
 
-		if (i < k && x[i] < x[i+1])
+		if (i < k-1 && x[i] + 1 < x[i+1])
 		{
-			for (int j = i; j < k; j++)
+			for (int j = i+1; j < k; j++)
 			{
-				x[j+1] = x[j] + 1;
+				x[j] = x[j-1] + 1;
 			}
 		}
 
@@ -30,7 +30,7 @@ bool next(int x[], int k, int c, int i)
 
 bool adjust(int x[], int k, int c)
 {
-	return next(x, k, c, k);
+	return next(x, k, c, k - 1);
 }
 
 combination_info_t * initialize(card_t * set, int set_size, int combination_size, int buffer_size)

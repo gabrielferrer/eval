@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include "enum.h"
 #include "eval.h"
+#include "misc.h"
 
 hand_rank_result_t r;
 
@@ -115,18 +116,20 @@ void comparation_tests()
 	compare_test("KhJhQhThAh", "JcQcTcAcKc", 0);
 }
 
-#define BUFFER_SIZE 10000
+#define BUFFER_SIZE 100
 
 void combination_tests()
 {
 	card_t deck[DECK_SIZE];
+	char card_buffer[3];
 
 	// Initialize deck.
-	for (suit_t s = CLUBS; s <= SPADES; s++)
+	// Ranks must be first, then suits for INDEX to work.
+	for (rank_t r = TWO; r <= ACE; r++)
 	{
-		for (rank_t r = TWO; r <= ACE; r++)
+		for (suit_t s = CLUBS; s <= SPADES; s++)
 		{
-			int i = (r << 2) + s - 8;
+			int i = INDEX(r, s);
 			deck[i].rank = r;
 			deck[i].suit = s;
 		}
@@ -135,6 +138,17 @@ void combination_tests()
 	combination_info_t * info = initialize(deck, DECK_SIZE, COMBINATION_SIZE, BUFFER_SIZE);
 
 	combinations(info);
+
+	for (int i = 0; i < info->combination_count; i++)
+	{
+		for (int j = 0; j < info->combination_size; j++)
+		{
+			card_to_string(&info->combination_buffer[i * info->combination_size + j], card_buffer);
+			printf("%s", card_buffer);
+		}
+
+		printf("\n");
+	}
 
 	dispose(info);
 }

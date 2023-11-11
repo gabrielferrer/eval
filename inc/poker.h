@@ -1,6 +1,8 @@
 #ifndef POKER_H
 #define POKER_H
 
+#define COMBINATION_SIZE 5
+
 typedef enum { HOLDEM, OMAHA, OMAHA5, OMAHA6 } rules_t;
 
 typedef enum { NO_SUIT, CLUBS, DIAMONDS, HEARTS, SPADES } suit_t;
@@ -10,5 +12,7 @@ typedef enum { NO_RANK, ONE, TWO, THREE, FOUR, FIVE, SIX, SEVEN, EIGHT, NINE, TE
 typedef enum { HIGH_CARD = 1, PAIR, TWO_PAIR, THREE_OF_A_KIND, STRAIGHT, FLUSH, FULL_HOUSE, FOUR_OF_A_KIND, STRAIGHT_FLUSH, ROYAL_FLUSH } hand_rank_t;
 
 typedef struct { rank_t rank; suit_t suit; } card_t;
+
+typedef card_t combination_t[COMBINATION_SIZE];
 
 #endif

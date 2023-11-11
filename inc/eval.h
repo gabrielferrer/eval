@@ -5,9 +5,12 @@
 #include "poker.h"
 
 #define DECK_SIZE 52
-#define COMBINATION_SIZE 5
 #define MAX_PLAYERS 10
 #define MAX_GROUPS 5
+
+// Heper macros.
+
+#define INDEX(rank, suit) (rank - 2 << 2) + suit - 1
 
 // Eval error flags.
 
@@ -17,8 +20,6 @@
 #define INVALID_POKER_RULES 8
 
 typedef struct{ double win_percent; double lose_percent; double tie_percent; } equity_t;
-
-typedef card_t combination_t[COMBINATION_SIZE];
 
 typedef struct
 {
@@ -51,10 +52,6 @@ typedef struct
 	card_t * single_group_cards[COMBINATION_SIZE]; // Pointers to cards into ordered_cards that are single group.
 	int single_group_cards_count;                  // How many cards with single group.
 } hand_rank_result_t;
-
-char * hand_rank_to_string(hand_rank_t hand_rank);
-
-bool string_to_combination(char * combination_string, combination_t combination);
 
 void hand_rank(combination_t combination, hand_rank_result_t * result);
 
