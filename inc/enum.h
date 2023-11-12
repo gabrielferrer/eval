@@ -9,6 +9,7 @@ typedef struct
 	card_t * set;                 // Set of cards to get combinations from.
 	int set_size;                 // How many cards there are in set.
 	int combination_size;         // How many cards per combination.
+	int combination_bytes;        // How many bytes per combination.
 	int * indexes;                // Indexes to cards into set. Used to build combinations.
 	card_t * combination_buffer;  // Buffer for combinations to be put into.
 	int buffer_size;              // Buffer size in combinations.

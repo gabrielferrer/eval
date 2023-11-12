@@ -116,7 +116,7 @@ void comparation_tests()
 	compare_test("KhJhQhThAh", "JcQcTcAcKc", 0);
 }
 
-#define BUFFER_SIZE 100
+#define BUFFER_SIZE 10000
 
 void combination_tests()
 {
@@ -135,21 +135,30 @@ void combination_tests()
 		}
 	}
 
+	bool more;
 	combination_info_t * info = initialize(deck, DECK_SIZE, COMBINATION_SIZE, BUFFER_SIZE);
+	FILE * output = fopen("C:\\Users\\Gabriel\\Desktop\\combinations.txt", "w");
 
-	combinations(info);
-
-	for (int i = 0; i < info->combination_count; i++)
+	do
 	{
-		for (int j = 0; j < info->combination_size; j++)
+		more = combinations(info);
+
+		for (int i = 0; i < info->combination_count; i++)
 		{
-			card_to_string(&info->combination_buffer[i * info->combination_size + j], card_buffer);
-			printf("%s", card_buffer);
+			for (int j = 0; j < info->combination_size; j++)
+			{
+				card_to_string(&info->combination_buffer[i * info->combination_size + j], card_buffer);
+				//printf("%s", card_buffer);
+				fwrite(card_buffer, 1, 2, output);
+			}
+
+			//printf("\n");
+			fwrite("\n", 1, 1, output);
 		}
-
-		printf("\n");
 	}
+	while (more);
 
+	fclose(output);
 	dispose(info);
 }
 

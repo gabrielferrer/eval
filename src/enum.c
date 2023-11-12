@@ -50,10 +50,17 @@ combination_info_t * initialize(card_t * set, int set_size, int combination_size
 	info->set = set;
 	info->set_size = set_size;
 	info->combination_size = combination_size;
-	info->indexes = (int *)malloc(info->combination_size);
+	info->combination_bytes = info->combination_size * sizeof(card_t);
+	info->indexes = (int *)malloc(info->combination_size * sizeof(int));
 	info->combination_buffer = (card_t *)malloc(combination_size * sizeof(card_t) * buffer_size);
 	info->buffer_size = buffer_size;
 	info->current_combination = (card_t *)malloc(combination_size * sizeof(card_t));
+
+	// Initialize indexes to point to first elements.
+	for (int i = 0; i < info->combination_size; i++)
+	{
+		info->indexes[i] = i;
+	}
 
 	return info;
 }
@@ -85,14 +92,6 @@ void dispose(combination_info_t * info)
 
 bool combinations(combination_info_t * info)
 {
-	int combination_bytes = info->combination_size * sizeof(card_t);
-
-	// Initialize indexes to point to first elements.
-	for (int i = 0; i < info->combination_size; i++)
-	{
-		info->indexes[i] = i;
-	}
-
 	bool done;
 	card_t * buffer_offset = info->combination_buffer;
 	info->combination_count = 0;
@@ -107,7 +106,7 @@ bool combinations(combination_info_t * info)
 		}
 
 		// Copy combination to buffer.
-		memcpy(buffer_offset, info->current_combination, combination_bytes);
+		memcpy(buffer_offset, info->current_combination, info->combination_bytes);
 		// Adjust destination buffer index.
 		buffer_offset += info->combination_size;
 		info->combination_count++;
