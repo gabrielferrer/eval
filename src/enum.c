@@ -50,11 +50,11 @@ combination_info_t * initialize(card_t * set, int set_size, int combination_size
 	info->set = set;
 	info->set_size = set_size;
 	info->combination_size = combination_size;
-	info->combination_bytes = info->combination_size * sizeof(card_t);
-	info->indexes = (int *)malloc(info->combination_size * sizeof(int));
-	info->combination_buffer = (card_t *)malloc(combination_size * sizeof(card_t) * buffer_size);
-	info->buffer_size = buffer_size;
-	info->current_combination = (card_t *)malloc(combination_size * sizeof(card_t));
+	info->combination_bytes = (combination_size == 0 ? set_size : info->combination_size) * sizeof(card_t);
+	info->indexes = combination_size == 0 ? NULL : (int *)malloc(info->combination_size * sizeof(int));
+	info->combination_buffer = (card_t *)malloc((combination_size == 0 ? set_size : combination_size * buffer_size) * sizeof(card_t));
+	info->buffer_size = combination_size == 0 ? 1 : buffer_size;
+	info->current_combination = combination_size == 0 ? NULL : (card_t *)malloc(combination_size * sizeof(card_t));
 
 	// Initialize indexes to point to first elements.
 	for (int i = 0; i < info->combination_size; i++)
@@ -95,6 +95,13 @@ bool combinations(combination_info_t * info)
 	bool done;
 	card_t * buffer_offset = info->combination_buffer;
 	info->combination_count = 0;
+
+	if (info->combination_size == 0)
+	{
+		memcpy(buffer_offset, info->set, info->combination_bytes);
+		info->combination_count++;
+		return false;
+	}
 
 	do
 	{

@@ -5,7 +5,7 @@
 #include "enum.h"
 #include "misc.h"
 
-#define PAGE_SIZE 1000
+#define PAGE_SIZE 10000
 
 typedef struct
 {
@@ -19,176 +19,6 @@ combination_t temp_combination1;
 combination_t temp_combination2;
 hand_rank_result_t temp_result1;
 hand_rank_result_t temp_result2;
-
-bool adjust_indexes_with_5(int x[], int c)
-{
-	if (x[4] + 1 < c)
-	{
-		x[4]++;
-	}
-	else if (x[3] + 1 < x[4])
-	{
-		x[3]++;
-
-		if (x[3] + 1 < x[4])
-		{
-			x[4] = x[3] + 1;
-		}
-	}
-	else if (x[2] + 1 < x[3])
-	{
-		x[2]++;
-
-		if (x[2] + 1 < x[3])
-		{
-			x[3] = x[2] + 1;
-			x[4] = x[3] + 1;
-		}
-	}
-	else if (x[1] + 1 < x[2])
-	{
-		x[1]++;
-
-		if (x[1] + 1 < x[2])
-		{
-			x[2] = x[1] + 1;
-			x[3] = x[2] + 1;
-			x[4] = x[3] + 1;
-		}
-	}
-	else if (x[0] + 1 < x[1])
-	{
-		x[0]++;
-
-		if (x[0] + 1 < x[1])
-		{
-			x[1] = x[0] + 1;
-			x[2] = x[1] + 1;
-			x[3] = x[2] + 1;
-			x[4] = x[3] + 1;
-		}
-	}
-	else
-	{
-		return true;
-	}
-
-	return false;
-}
-
-bool adjust_indexes_with_4(int x[], int c)
-{
-	if (x[3] + 1 < c)
-	{
-		x[3]++;
-	}
-	else if (x[2] + 1 < x[3])
-	{
-		x[2]++;
-
-		if (x[2] + 1 < x[3])
-		{
-			x[3] = x[2] + 1;
-		}
-	}
-	else if (x[1] + 1 < x[2])
-	{
-		x[1]++;
-
-		if (x[1] + 1 < x[2])
-		{
-			x[2] = x[1] + 1;
-			x[3] = x[2] + 1;
-		}
-	}
-	else if (x[0] + 1 < x[1])
-	{
-		x[0]++;
-
-		if (x[0] + 1 < x[1])
-		{
-			x[1] = x[0] + 1;
-			x[2] = x[1] + 1;
-			x[3] = x[2] + 1;
-		}
-	}
-	else
-	{
-		return true;
-	}
-
-	return false;
-}
-
-bool adjust_indexes_with_3(int x[], int c)
-{
-	if (x[2] + 1 < c)
-	{
-		x[2]++;
-	}
-	else if (x[1] + 1 < x[2])
-	{
-		x[1]++;
-
-		if (x[1] + 1 < x[2])
-		{
-			x[2] = x[1] + 1;
-		}
-	}
-	else if (x[0] + 1 < x[1])
-	{
-		x[0]++;
-
-		if (x[0] + 1 < x[1])
-		{
-			x[1] = x[0] + 1;
-			x[2] = x[1] + 1;
-		}
-	}
-	else
-	{
-		return true;
-	}
-
-	return false;
-}
-
-bool adjust_indexes_with_2(int x[], int c)
-{
-	if (x[1] + 1 < c)
-	{
-		x[1]++;
-	}
-	else if (x[0] + 1 < x[1])
-	{
-		x[0]++;
-
-		if (x[0] + 1 < x[1])
-		{
-			x[1] = x[0] + 1;
-		}
-	}
-	else
-	{
-		return true;
-	}
-
-	return false;
-}
-
-bool adjust_indexes_with_1(int x[], int c)
-{
-	if (x[0] + 1 < c)
-	{
-		x[0]++;
-	}
-	else
-	{
-		return true;
-	}
-
-	return false;
-}
 
 /*
 	Returns how many combinations there are for the given poker rules.
@@ -617,7 +447,6 @@ int compare(combination_t combination1, combination_t combination2)
 
 bool eval(eval_t * eval_data)
 {
-	combination_t combinations_page[PAGE_SIZE];
 	card_t deck[DECK_SIZE];
 	player_info_t * players_info;
 	int cards_count = DECK_SIZE;
@@ -719,9 +548,9 @@ bool eval(eval_t * eval_data)
 		}
 	}
 
-	int combinations = get_player_combinations(eval_data->rules);
+	int player_combinations = get_player_combinations(eval_data->rules);
 
-	if (combinations == 0)
+	if (player_combinations == 0)
 	{
 		eval_data->errors |= INVALID_POKER_RULES;
 		return false;
@@ -731,13 +560,14 @@ bool eval(eval_t * eval_data)
 
 	for (int i = 0; i < eval_data->players; i++)
 	{
-		players_info[i].combinations = (combination_t *)malloc(combinations * sizeof(combination_t));
+		players_info[i].combinations = (combination_t *)malloc(player_combinations * sizeof(combination_t));
 	}
 
-	int combination_indexes_count = COMBINATION_SIZE - eval_data->board_cards_count;
+	int combination_size = COMBINATION_SIZE - eval_data->board_cards_count;
 	int page_entries;
+	combination_t * combinations_page = (combination_t *)malloc(PAGE_SIZE * sizeof(combination_t));
 
-	if (combination_indexes_count == 0)
+	if (combination_size == 0)
 	{
 		page_entries = 1;
 
@@ -751,33 +581,16 @@ bool eval(eval_t * eval_data)
 	}
 	else
 	{
-		int combination_indexes[COMBINATION_SIZE];
-		bool (*adjust_indexes)(int [], int) = combination_indexes_count == 5 ? &adjust_indexes_with_5
-			: combination_indexes_count == 4 ? &adjust_indexes_with_4
-			: combination_indexes_count == 3 ? &adjust_indexes_with_3
-			: combination_indexes_count == 2 ? &adjust_indexes_with_2
-			: combination_indexes_count == 1 ? &adjust_indexes_with_1
-			: NULL;
 		bool done = false;
 
-		// Initialize indexes to cards.
-		for (int i = 0; i < COMBINATION_SIZE; i++)
-		{
-			if (i < combination_indexes_count)
-			{
-				combination_indexes[i] = i;
-			}
-			else
-			{
-				combination_indexes[i] = -1;
-			}
-		}
+		combination_info_t * info = initialize(deck, cards_count, combination_size, PAGE_SIZE);
 
 		do
 		{
+			done = combinations(info);
 			page_entries = 0;
 
-			while (page_entries < PAGE_SIZE && !done)
+			while (page_entries < info->combination_count)
 			{
 				// Generate combination.
 				for (int i = 0; i < COMBINATION_SIZE; i++)
@@ -791,19 +604,24 @@ bool eval(eval_t * eval_data)
 					else
 					{
 						// Take remaining deck card to complete combination.
-						combinations_page[page_entries][i].rank = cards[combination_indexes[i]].rank;
-						combinations_page[page_entries][i].suit = cards[combination_indexes[i]].suit;
+						combinations_page[page_entries][i].rank = info->combination_buffer[page_entries * sizeof(combination_t) + i].rank;
+						combinations_page[page_entries][i].suit = info->combination_buffer[page_entries * sizeof(combination_t) + i].suit;
 					}
 				}
 
 				page_entries++;
-
-				done = adjust_indexes(combination_indexes, cards_count);
 			}
 
 			eval_with_players(eval_data, players_info, combinations_page, page_entries);
 		}
 		while (!done);
+
+		dispose(info);
+	}
+
+	if (combinations_page)
+	{
+		free(combinations_page);
 	}
 
 	if (cards)
