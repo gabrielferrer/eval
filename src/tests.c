@@ -6,7 +6,7 @@
 
 hand_rank_result_t r;
 
-void hand_rank_test(char * combination_string, hand_rank_t hr)
+void hand_rank_test(char* combination_string, hand_rank_t hr)
 {
 	combination_t combination;
 	hand_rank_result_t result;
@@ -22,7 +22,7 @@ void hand_rank_test(char * combination_string, hand_rank_t hr)
 	printf("Combination: %s. Expected: %s. Actual: %s\n", combination_string, hand_rank_to_string(hr), hand_rank_to_string(result.hand_rank));
 }
 
-void compare_test(char * combination_string1, char * combination_string2, int e)
+void compare_test(char* combination_string1, char* combination_string2, int e)
 {
 	combination_t combination1;
 	combination_t combination2;
@@ -136,8 +136,8 @@ void combination_tests()
 	}
 
 	bool more;
-	combination_info_t * info = initialize(deck, DECK_SIZE, COMBINATION_SIZE, BUFFER_SIZE);
-	FILE * output = fopen("C:\\Users\\Gabriel\\Desktop\\combinations.txt", "w");
+	combination_info_t* info = initialize(deck, DECK_SIZE, COMBINATION_SIZE, BUFFER_SIZE);
+	FILE* output = fopen("C:\\Users\\Gabriel\\Desktop\\combinations.txt", "w");
 
 	do
 	{

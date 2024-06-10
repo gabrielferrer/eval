@@ -10,7 +10,7 @@
 typedef struct
 {
 	int combinations_count;
-	combination_t * combinations;
+	combination_t* combinations;
 	int wins;
 	int ties;
 } player_info_t;
@@ -39,7 +39,7 @@ int get_player_combinations(rules_t rules)
 
 	if (rules == OMAHA)
 	{
-		// For Omaha (4 hole cards) user can form combinations total.
+		// For Omaha (4 hole cards) user can form 60 combinations total.
 		// Two hole cards mandatory combined with 5 cards from board.
 		// C(4, 2) * C(5, 2) = 6 * 10 = 60
 		return 60;
@@ -47,7 +47,7 @@ int get_player_combinations(rules_t rules)
 
 	if (rules == OMAHA5)
 	{
-		// For Omaha (5 hole cards) user can form combinations total.
+		// For Omaha (5 hole cards) user can form 100 combinations total.
 		// Two hole cards mandatory combined with 5 cards from board.
 		// C(5, 2) * C(5, 2) = 10 * 10 = 100
 		return 100;
@@ -55,7 +55,7 @@ int get_player_combinations(rules_t rules)
 
 	if (rules == OMAHA6)
 	{
-		// For Omaha (6 hole cards) user can form combinations total.
+		// For Omaha (6 hole cards) user can form 150 combinations total.
 		// Two hole cards mandatory combined with 5 cards from board.
 		// C(6, 2) * C(5, 2) = 15 * 10 = 150
 		return 150;
@@ -64,11 +64,7 @@ int get_player_combinations(rules_t rules)
 	return 0;
 }
 
-//void combine(card_t * source, card_t * destination, card_t * replacement, int replacement_count)
-//{	
-//}
-
-void generate_player_combinations(rules_t rules, combination_t board_cards, card_t * hole_cards, player_info_t * player_info)
+void generate_player_combinations(rules_t rules, combination_t board_cards, card_t* hole_cards, player_info_t* player_info)
 {
 	//int i = 0;
 
@@ -84,7 +80,7 @@ void generate_player_combinations(rules_t rules, combination_t board_cards, card
 	//}
 }
 
-void eval_with_players(eval_t * eval_data, player_info_t * players_info, combination_t * combinations_page, int page_entries)
+void eval_with_players(eval_t* eval_data, player_info_t* players_info, combination_t* combinations_page, int page_entries)
 {
 	for (int i = 0; i < page_entries; i++)
 	{
@@ -97,10 +93,10 @@ void eval_with_players(eval_t * eval_data, player_info_t * players_info, combina
 	}
 }
 
-int compare_cards(const void * a, const void * b)
+int compare_cards(const void* a, const void* b)
 {
-   card_t * c1 = (card_t *)a;
-   card_t * c2 = (card_t *)b;
+   card_t* c1 = (card_t*)a;
+   card_t* c2 = (card_t*)b;
 
    if (c1->rank < c2->rank)
    {
@@ -124,7 +120,7 @@ int compare_cards(const void * a, const void * b)
 		0, if both cards are ranked equal.
 		1, if first card is ranked above second card.
 */
-int compare_single_group_cards(card_t * c1[], card_t * c2[], int count)
+int compare_single_group_cards(card_t* c1[], card_t* c2[], int count)
 {
 	for (int i = count - 1; i >= 0; i--)
 	{
@@ -141,7 +137,7 @@ int compare_single_group_cards(card_t * c1[], card_t * c2[], int count)
 	return 0;
 }
 
-void check_group(group_t * g, card_t * c, hand_rank_result_t * r)
+void check_group(group_t* g, card_t* c, hand_rank_result_t* r)
 {
 	if (g->count == 1)
 	{
@@ -194,7 +190,7 @@ void reorder_straight_special_case(combination_t b)
 
 		Struct with information about the hand rank.
 */
-void hand_rank(combination_t combination, hand_rank_result_t * result)
+void hand_rank(combination_t combination, hand_rank_result_t* result)
 {
 	rank_t cr = NO_RANK;
 
@@ -445,10 +441,10 @@ int compare(combination_t combination1, combination_t combination2)
 	}
 }
 
-bool eval(eval_t * eval_data)
+bool eval(eval_t* eval_data)
 {
 	card_t deck[DECK_SIZE];
-	player_info_t * players_info;
+	player_info_t* players_info;
 	int cards_count = DECK_SIZE;
 	eval_data->errors = 0;
 
@@ -536,7 +532,7 @@ bool eval(eval_t * eval_data)
 		return false;
 	}
 
-	card_t * cards = (card_t *)malloc(cards_count * sizeof(card_t));
+	card_t* cards = (card_t*)malloc(cards_count * sizeof(card_t));
 
 	// Compact remaining cards.
 	for (int i = 0, j = 0; i < DECK_SIZE; i++)
@@ -556,16 +552,16 @@ bool eval(eval_t * eval_data)
 		return false;
 	}
 
-	players_info = (player_info_t *)malloc(eval_data->players * sizeof(player_info_t));
+	players_info = (player_info_t*)malloc(eval_data->players * sizeof(player_info_t));
 
 	for (int i = 0; i < eval_data->players; i++)
 	{
-		players_info[i].combinations = (combination_t *)malloc(player_combinations * sizeof(combination_t));
+		players_info[i].combinations = (combination_t*)malloc(player_combinations * sizeof(combination_t));
 	}
 
 	int combination_size = COMBINATION_SIZE - eval_data->board_cards_count;
 	int page_entries;
-	combination_t * combinations_page = (combination_t *)malloc(PAGE_SIZE * sizeof(combination_t));
+	combination_t* combinations_page = (combination_t*)malloc(PAGE_SIZE * sizeof(combination_t));
 
 	if (combination_size == 0)
 	{
@@ -583,7 +579,7 @@ bool eval(eval_t * eval_data)
 	{
 		bool done = false;
 
-		combination_info_t * info = initialize(deck, cards_count, combination_size, PAGE_SIZE);
+		combination_info_t* info = initialize(deck, cards_count, combination_size, PAGE_SIZE);
 
 		do
 		{

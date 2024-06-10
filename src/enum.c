@@ -33,14 +33,14 @@ bool adjust(int x[], int k, int c)
 	return next(x, k, c, k - 1);
 }
 
-combination_info_t * initialize(card_t * set, int set_size, int combination_size, int buffer_size)
+combination_info_t* initialize(card_t* set, int set_size, int combination_size, int buffer_size)
 {
 	if (set == NULL || combination_size < 0 || combination_size > set_size || buffer_size < 1)
 	{
 		return NULL;
 	}
 
-	combination_info_t * info = (combination_info_t *)malloc(sizeof(combination_info_t));
+	combination_info_t* info = (combination_info_t*)malloc(sizeof(combination_info_t));
 
 	if (info == NULL)
 	{
@@ -51,10 +51,10 @@ combination_info_t * initialize(card_t * set, int set_size, int combination_size
 	info->set_size = set_size;
 	info->combination_size = combination_size;
 	info->combination_bytes = (combination_size == 0 ? set_size : info->combination_size) * sizeof(card_t);
-	info->indexes = combination_size == 0 ? NULL : (int *)malloc(info->combination_size * sizeof(int));
-	info->combination_buffer = (card_t *)malloc((combination_size == 0 ? set_size : combination_size * buffer_size) * sizeof(card_t));
+	info->indexes = combination_size == 0 ? NULL : (int*)malloc(info->combination_size * sizeof(int));
+	info->combination_buffer = (card_t*)malloc((combination_size == 0 ? set_size : combination_size * buffer_size) * sizeof(card_t));
 	info->buffer_size = combination_size == 0 ? 1 : buffer_size;
-	info->current_combination = combination_size == 0 ? NULL : (card_t *)malloc(combination_size * sizeof(card_t));
+	info->current_combination = combination_size == 0 ? NULL : (card_t*)malloc(combination_size * sizeof(card_t));
 
 	// Initialize indexes to point to first elements.
 	for (int i = 0; i < info->combination_size; i++)
@@ -65,7 +65,7 @@ combination_info_t * initialize(card_t * set, int set_size, int combination_size
 	return info;
 }
 
-void dispose(combination_info_t * info)
+void dispose(combination_info_t* info)
 {
 	if (info == NULL)
 	{
@@ -90,10 +90,10 @@ void dispose(combination_info_t * info)
 	free(info);
 }
 
-bool combinations(combination_info_t * info)
+bool combinations(combination_info_t* info)
 {
 	bool done;
-	card_t * buffer_offset = info->combination_buffer;
+	card_t* buffer_offset = info->combination_buffer;
 	info->combination_count = 0;
 
 	if (info->combination_size == 0)

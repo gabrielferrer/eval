@@ -61,7 +61,7 @@ char to_suit_string(suit_t s)
 	return '\0';	
 }
 
-char * hand_rank_to_string(hand_rank_t hand_rank)
+char* hand_rank_to_string(hand_rank_t hand_rank)
 {
 	if (hand_rank == HIGH_CARD) return "High Card";
 	if (hand_rank == PAIR) return "Pair";
@@ -77,7 +77,7 @@ char * hand_rank_to_string(hand_rank_t hand_rank)
 	return NULL;
 }
 
-bool string_to_combination(char * combination_string, combination_t combination)
+bool string_to_combination(char* combination_string, combination_t combination)
 {
 	if (strlen(combination_string) != 2 * COMBINATION_SIZE)
 	{
@@ -110,7 +110,7 @@ bool string_to_combination(char * combination_string, combination_t combination)
 	return true;
 }
 
-char * card_to_string(card_t * card, char * destination)
+char* card_to_string(card_t* card, char* destination)
 {
 	destination[0] = to_rank_string(card->rank);
 	destination[1] = to_suit_string(card->suit);

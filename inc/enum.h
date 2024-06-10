@@ -6,15 +6,15 @@
 
 typedef struct
 {
-	card_t * set;                 // Set of cards to get combinations from.
-	int set_size;                 // How many cards there are in set.
-	int combination_size;         // How many cards per combination.
-	int combination_bytes;        // How many bytes per combination.
-	int * indexes;                // Indexes to cards into set. Used to build combinations.
-	card_t * combination_buffer;  // Buffer for combinations to be put into.
-	int buffer_size;              // Buffer size in combinations.
-	int combination_count;        // How many combinations there are into buffer.
-	card_t * current_combination; // Current generated combination.
+	card_t* set;                 // Set of cards to get combinations from.
+	int set_size;                // How many cards there are in set.
+	int combination_size;        // How many cards per combination.
+	int combination_bytes;       // How many bytes per combination.
+	int* indexes;                // Indexes to cards into set. Used to build combinations.
+	card_t* combination_buffer;  // Buffer for combinations to be put into.
+	int buffer_size;             // Buffer size in combinations.
+	int combination_count;       // How many combinations there are into buffer.
+	card_t* current_combination; // Current generated combination.
 } combination_info_t;
 
 /*
@@ -31,12 +31,12 @@ typedef struct
 
 		An initialized structure or NULL if there was an error.
 */
-combination_info_t * initialize(card_t * set, int set_size, int combination_size, int buffer_size);
+combination_info_t* initialize(card_t* set, int set_size, int combination_size, int buffer_size);
 
 /*
 	Disposes a previously initialized structure.
 */
-void dispose(combination_info_t * info);
+void dispose(combination_info_t* info);
 
 /*
 	Calculates all the possible combinations for a given set of cards.
@@ -49,6 +49,6 @@ void dispose(combination_info_t * info);
 
 		True if there are more combinations to generate, false when process is done.
 */
-bool combinations(combination_info_t * info);
+bool combinations(combination_info_t* info);
 
 #endif
