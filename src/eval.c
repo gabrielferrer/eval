@@ -9,10 +9,11 @@
 
 typedef struct
 {
-	int combinations_count;
-	combination_t* combinations;
-	int wins;
-	int ties;
+	combination_t* combinations;    // Temporary buffer for calculated combinations per board.
+	int combinations_count;         // How many combinations into buffer.
+	combination_t best_combination; // Best player's combination.
+	int wins;                       // How many combinations won.
+	int ties;                       // How many combinations tied.
 } player_info_t;
 
 combination_t temp_combination1;
@@ -64,32 +65,56 @@ int get_player_combinations(rules_t rules)
 	return 0;
 }
 
-void generate_player_combinations(rules_t rules, combination_t board_cards, card_t* hole_cards, player_info_t* player_info)
+void calc_best_combination(rules_t rules, combination_t board_cards, card_t* hole_cards, player_info_t* player_info)
 {
-	//int i = 0;
-
-	//if (rules == HOLDEM)
-	//{
-		// C(5, 0)
-	//	memcpy(player_info->combinations[i++], board_cards, sizeof(combination_t));
-		// 2 * C(5, 1)
-		//hole_cards[0]
-		//hole_cards[1]
-
-	//	return;
-	//}
+	// TODO: calculate combinations based on rules.
 }
 
-void eval_with_players(eval_t* eval_data, player_info_t* players_info, combination_t* combinations_page, int page_entries)
+void eval_players(eval_t* eval_data, player_info_t* players_info, combination_t* combinations_page, int page_entries)
 {
+	player_info_t* best_players[MAX_PLAYERS];
+	int best_count = 0;
+
 	for (int i = 0; i < page_entries; i++)
 	{
 		for (int j = 0; j < eval_data->players; j++)
 		{
-			generate_player_combinations(eval_data->rules, combinations_page[i], eval_data->hole_cards[j], &players_info[j]);
+			calc_best_combination(eval_data->rules, combinations_page[i], eval_data->hole_cards[j], &players_info[j]);
+
+			if (best_count == 0)
+			{
+				best_players[best_count++] = &players_info[j];
+				continue;
+			}
+
+			int comparison = compare(best_players[0]->best_combination, players_info[j].best_combination);
+
+			if (comparison > 0)
+			{
+				continue;
+			}
+
+			if (comparison == 0)
+			{
+				best_players[best_count++] = &players_info[j];
+				continue;
+			}
+
+			best_count = 0;
+			best_players[best_count++] = &players_info[j];
 		}
 
-		//compare(combinations_page[i], );
+		if (best_count == 1)
+		{
+			best_players[0]->wins++;
+		}
+		else
+		{
+			for (int k = 0; k < best_count; k++)
+			{
+				best_players[k]->ties++;
+			}
+		}
 	}
 }
 
@@ -573,7 +598,7 @@ bool eval(eval_t* eval_data)
 			combinations_page[0][i].suit = eval_data->board_cards[i].suit;
 		}
 
-		eval_with_players(eval_data, players_info, combinations_page, page_entries);
+		eval_players(eval_data, players_info, combinations_page, page_entries);
 	}
 	else
 	{
@@ -608,7 +633,7 @@ bool eval(eval_t* eval_data)
 				page_entries++;
 			}
 
-			eval_with_players(eval_data, players_info, combinations_page, page_entries);
+			eval_players(eval_data, players_info, combinations_page, page_entries);
 		}
 		while (!done);
 
