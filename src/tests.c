@@ -167,15 +167,18 @@ void combination_tests()
 void eval_tests()
 {
 	eval_t eval_data;
-	card_t hc_p1[] = { { THREE, HEARTS }, { FIVE, HEARTS } };
-	card_t hc_p2[] = { { TEN, SPADES }, { TWO, CLUBS } };
+	card_t hole_cards[2][2] =
+	{
+		{ { THREE, HEARTS }, { FIVE, HEARTS } },
+		{ { TEN, SPADES }, { TWO, CLUBS } }
+	};
 
 	eval_data.rules = HOLDEM;
 	eval_data.players = PLAYERS;
 	eval_data.board_cards = NULL;
 	eval_data.dead_cards = NULL;
-	eval_data.hole_cards[0] = hc_p1;
-	eval_data.hole_cards[1] = hc_p2;
+	eval_data.hole_cards[0] = hole_cards[0];
+	eval_data.hole_cards[1] = hole_cards[1];
 	eval_data.board_cards_count = eval_data.board_cards != NULL ? sizeof(eval_data.board_cards) / sizeof(card_t) : 0;
 	eval_data.dead_cards_count = eval_data.dead_cards != NULL ? sizeof(eval_data.dead_cards) / sizeof(card_t) : 0;
 	eval_data.hole_cards_count = 2;
