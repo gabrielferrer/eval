@@ -1,8 +1,12 @@
 #include <stddef.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include "enum.h"
 #include "eval.h"
 #include "misc.h"
+
+#define BUFFER_SIZE 10000
+#define PLAYERS 2
 
 hand_rank_result_t r;
 
@@ -116,8 +120,6 @@ void comparation_tests()
 	compare_test("KhJhQhThAh", "JcQcTcAcKc", 0);
 }
 
-#define BUFFER_SIZE 10000
-
 void combination_tests()
 {
 	card_t deck[DECK_SIZE];
@@ -162,9 +164,49 @@ void combination_tests()
 	dispose(info);
 }
 
+void eval_tests()
+{
+	eval_t eval_data;
+	card_t hc_p1[] = { { THREE, HEARTS }, { FIVE, HEARTS } };
+	card_t hc_p2[] = { { TEN, SPADES }, { TWO, CLUBS } };
+
+	eval_data.rules = HOLDEM;
+	eval_data.players = PLAYERS;
+	eval_data.board_cards = NULL;
+	eval_data.dead_cards = NULL;
+	eval_data.hole_cards[0] = hc_p1;
+	eval_data.hole_cards[1] = hc_p2;
+	eval_data.board_cards_count = eval_data.board_cards != NULL ? sizeof(eval_data.board_cards) / sizeof(card_t) : 0;
+	eval_data.dead_cards_count = eval_data.dead_cards != NULL ? sizeof(eval_data.dead_cards) / sizeof(card_t) : 0;
+	eval_data.hole_cards_count = 2;
+
+	eval(&eval_data);
+
+	if (eval_data.errors & DUPLICATED_CARD_FLAG)
+	{
+		printf ("Duplicated card.");
+	}
+
+	if (eval_data.errors & INSUFFICIENT_COMBINATION_CARDS)
+	{
+		printf ("Insufficient combination cards.");
+	}
+
+	if (eval_data.errors & INVALID_BOARD_CARDS_COUNT)
+	{
+		printf ("Invalid board cards count.");
+	}
+
+	if (eval_data.errors & INVALID_POKER_RULES)
+	{
+		printf ("Invalid poker rules.");
+	}
+}
+
 int main()
 {
 	//rank_tests();
 	//comparation_tests();
-	combination_tests();
+	//combination_tests();
+	eval_tests();
 }

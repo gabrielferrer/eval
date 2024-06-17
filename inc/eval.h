@@ -31,7 +31,7 @@ typedef struct
 	card_t* board_cards;
 	card_t* hole_cards[MAX_PLAYERS];
 	card_t* dead_cards;
-	equity_t* equities;
+	equity_t equities[MAX_PLAYERS];
 	int errors;
 } eval_t;
 

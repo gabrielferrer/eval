@@ -1,37 +1,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include "cmbntn.h"
 #include "enum.h"
-
-bool next(int x[], int k, int c, int i)
-{
-	if (i < 0)
-	{
-		return true;
-	}
-
-	if (x[i] + 1 < c)
-	{
-		x[i]++;
-
-		if (i < k-1 && x[i] + 1 < x[i+1])
-		{
-			for (int j = i+1; j < k; j++)
-			{
-				x[j] = x[j-1] + 1;
-			}
-		}
-
-		return false;
-	}
-
-	return next(x, k, x[i], i-1);
-}
-
-bool adjust(int x[], int k, int c)
-{
-	return next(x, k, c, k - 1);
-}
 
 combination_info_t* initialize(card_t* set, int set_size, int combination_size, int buffer_size)
 {
@@ -118,7 +89,7 @@ bool combinations(combination_info_t* info)
 		buffer_offset += info->combination_size;
 		info->combination_count++;
 		// Adjust combination indexes for next combination.
-		done = adjust(info->indexes, info->combination_size, info->set_size);
+		done = next(info->indexes, info->combination_size, info->set_size);
 	}
 	while (!done && info->combination_count < info->buffer_size);
 

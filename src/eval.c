@@ -4,6 +4,7 @@
 #include "eval.h"
 #include "enum.h"
 #include "misc.h"
+#include "fsm.h"
 
 #define PAGE_SIZE 10000
 
@@ -65,9 +66,25 @@ int get_player_combinations(rules_t rules)
 	return 0;
 }
 
-void calc_best_combination(rules_t rules, combination_t board_cards, card_t* hole_cards, player_info_t* player_info)
+void calc_best_combination(rules_t rules, combination_t best_combination)
 {
-	// TODO: calculate combinations based on rules.
+	combination_t current;
+
+	FSM_next(current);
+	// Initialize best combination.
+	memcpy(best_combination, current, sizeof(combination_t));
+
+	while (FSM_next(current))
+	{
+		int comparison = compare(current, best_combination);
+
+		if (comparison <= 0)
+		{
+			continue;
+		}
+
+		memcpy(best_combination, current, sizeof(combination_t));
+	}
 }
 
 void eval_players(eval_t* eval_data, player_info_t* players_info, combination_t* combinations_page, int page_entries)
@@ -77,9 +94,13 @@ void eval_players(eval_t* eval_data, player_info_t* players_info, combination_t*
 
 	for (int i = 0; i < page_entries; i++)
 	{
+		FSM_reset_board_cards(combinations_page[i]);
+
 		for (int j = 0; j < eval_data->players; j++)
 		{
-			calc_best_combination(eval_data->rules, combinations_page[i], eval_data->hole_cards[j], &players_info[j]);
+			FSM_reset_hole_cards(eval_data->hole_cards[j], eval_data->hole_cards_count);
+
+			calc_best_combination(eval_data->rules, players_info[j].best_combination);
 
 			if (best_count == 0)
 			{
@@ -539,14 +560,14 @@ bool eval(eval_t* eval_data)
 		{
 			int k = INDEX(eval_data->hole_cards[i][j].rank, eval_data->hole_cards[i][j].suit);
 
-			if (deck[j].rank == NO_RANK)
+			if (deck[k].rank == NO_RANK)
 			{
 				eval_data->errors |= DUPLICATED_CARD_FLAG;
 				return false;
 			}
 
-			deck[j].rank = NO_RANK;
-			deck[j].suit = NO_SUIT;
+			deck[k].rank = NO_RANK;
+			deck[k].suit = NO_SUIT;
 			--cards_count;
 		}
 	}
@@ -587,6 +608,8 @@ bool eval(eval_t* eval_data)
 	int combination_size = COMBINATION_SIZE - eval_data->board_cards_count;
 	int page_entries;
 	combination_t* combinations_page = (combination_t*)malloc(PAGE_SIZE * sizeof(combination_t));
+
+	FSM_reset_rules(eval_data->rules);
 
 	if (combination_size == 0)
 	{
