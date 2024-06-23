@@ -2,75 +2,75 @@
 #include "cmbntn.h"
 #include "fsm.h"
 
-typedef void (*state_t)(combination_t combination);
+typedef void (*state_t)(board_t board);
 
 int CardIndex;
 int Indexes[2];
 card_t HoleCards[6];
 int CardsCount;
-combination_t BoardCards;
+board_t BoardCards;
 state_t* CurrentStates;
 int CurrentState;
 
-void holdem_0(combination_t combination);
-void holdem_init_1a(combination_t combination);
-void holdem_1(combination_t combination);
-void init_holdem_1b(combination_t combination);
-void init_holdem_2(combination_t combination);
-void holdem_2(combination_t combination);
+void holdem_0(board_t board);
+void holdem_init_1a(board_t board);
+void holdem_1(board_t board);
+void init_holdem_1b(board_t board);
+void init_holdem_2(board_t board);
+void holdem_2(board_t board);
 
-void omaha_init(combination_t combination);
-void omaha(combination_t combination);
+void omaha_init(board_t board);
+void omaha(board_t board);
 
 state_t HoldemStates[] = { holdem_0, holdem_init_1a, holdem_1, init_holdem_1b, holdem_1, init_holdem_2, holdem_2 };
 
 state_t OmahaStates[] = { omaha_init, omaha };
 
-void holdem_0(combination_t combination)
+void holdem_0(board_t board)
 {
-	memcpy(combination, BoardCards, sizeof(combination_t));
+	memcpy(board, BoardCards, sizeof(board_t));
 	CurrentState++;
 }
 
-void holdem_init_1a(combination_t combination)
+void holdem_init_1a(board_t board)
 {
 	CardIndex = 0;
 	Indexes[0] = 0;
 	CurrentState++;
 }
 
-void holdem_1(combination_t combination)
+void holdem_1(board_t board)
 {
-	combination[0].rank = HoleCards[CardsCount].rank;
-	combination[0].suit = HoleCards[CardsCount].suit;
+	board[0].rank = HoleCards[CardsCount].rank;
+	board[0].suit = HoleCards[CardsCount].suit;
 
-	for (int s = 0, d = 1; d < sizeof(combination_t); s++, d++)
+	for (int s = 0, d = 1; d < sizeof(board_t); s++, d++)
 	{
 		if (s == Indexes[0])
 		{
 			continue;
 		}
 
-		combination[d].rank = BoardCards[s].rank;
-		combination[d].suit = BoardCards[s].suit;
+		board[d].rank = BoardCards[s].rank;
+		board[d].suit = BoardCards[s].suit;
 	}
 
 	Indexes[0]++;
 
-	if (Indexes[0] >= sizeof(combination_t))
+	if (Indexes[0] >= sizeof(board_t))
 	{
 		CurrentState++;
 	}
 }
 
-void init_holdem_1b(combination_t combination)
+void init_holdem_1b(board_t board)
 {
 	CardIndex = 1;
 	Indexes[0] = 0;
 	CurrentState++;
 }
 
-void init_holdem_2(combination_t combination)
+void init_holdem_2(board_t board)
 {
 	CardIndex = 2;
 	Indexes[0] = 0;
@@ -78,36 +78,36 @@ void init_holdem_2(combination_t combination)
 	CurrentState++;
 }
 
-void holdem_2(combination_t combination)
+void holdem_2(board_t board)
 {
 	for (int i = 0; i < 2; i++)
 	{
-		combination[i].rank = BoardCards[Indexes[i]].rank;
-		combination[i].suit = BoardCards[Indexes[i]].suit;
+		board[i].rank = BoardCards[Indexes[i]].rank;
+		board[i].suit = BoardCards[Indexes[i]].suit;
 	}
 
-	for (int s = 0, d = 2; d < sizeof(combination_t); s++, d++)
+	for (int s = 0, d = 2; d < sizeof(board_t); s++, d++)
 	{
 		if (s == Indexes[0] || s == Indexes[1])
 		{
 			continue;
 		}
 
-		combination[d].rank = BoardCards[s].rank;
-		combination[d].suit = BoardCards[s].suit;
+		board[d].rank = BoardCards[s].rank;
+		board[d].suit = BoardCards[s].suit;
 	}
 
-	if (next(Indexes, 2, sizeof(combination_t)))
+	if (next(Indexes, 2, sizeof(board_t)))
 	{
 		CurrentState++;
 	}
 }
 
-void omaha_init(combination_t combination)
+void omaha_init(board_t board)
 {
 }
 
-void omaha(combination_t combination)
+void omaha(board_t board)
 {
 }
 
@@ -124,20 +124,20 @@ void FSM_reset_hole_cards(card_t* hole_cards, int cards_count)
 	CurrentState = 0;
 }
 
-void FSM_reset_board_cards(combination_t board_cards)
+void FSM_reset_board_cards(board_t board_cards)
 {
-	memcpy(BoardCards, board_cards, sizeof(combination_t));
+	memcpy(BoardCards, board_cards, sizeof(board_t));
 	CurrentState = 0;
 }
 
-bool FSM_next(combination_t combination)
+bool FSM_next(board_t board)
 {
 	if (CurrentState >= sizeof(CurrentStates))
 	{
 		return false;
 	}
 
-	CurrentStates[CurrentState](combination);
+	CurrentStates[CurrentState](board);
 
 	return true;
 }

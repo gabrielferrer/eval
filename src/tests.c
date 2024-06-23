@@ -10,42 +10,42 @@
 
 hand_rank_result_t r;
 
-void hand_rank_test(char* combination_string, hand_rank_t hr)
+void hand_rank_test(char* board_string, hand_rank_t hr)
 {
-	combination_t combination;
+	board_t board;
 	hand_rank_result_t result;
 
-	if (!string_to_combination(combination_string, combination))
+	if (!string_to_board(board_string, board))
 	{
-		printf("Invalid input: %s", combination_string);
+		printf("Invalid input: %s", board_string);
 		return;
 	}
 
-	hand_rank(combination, &result);
+	hand_rank(board, &result);
 
-	printf("Combination: %s. Expected: %s. Actual: %s\n", combination_string, hand_rank_to_string(hr), hand_rank_to_string(result.hand_rank));
+	printf("Board: %s. Expected: %s. Actual: %s\n", board_string, hand_rank_to_string(hr), hand_rank_to_string(result.hand_rank));
 }
 
-void compare_test(char* combination_string1, char* combination_string2, int e)
+void compare_test(char* board_string1, char* board_string2, int e)
 {
-	combination_t combination1;
-	combination_t combination2;
+	board_t board1;
+	board_t board2;
 	hand_rank_result_t result1;
 	hand_rank_result_t result2;
 
-	if (!string_to_combination(combination_string1, combination1))
+	if (!string_to_board(board_string1, board1))
 	{
-		printf("Invalid input: %s", combination_string1);
+		printf("Invalid input: %s", board_string1);
 		return;
 	}
 
-	if (!string_to_combination(combination_string2, combination2))
+	if (!string_to_board(board_string2, board2))
 	{
-		printf("Invalid input: %s", combination_string2);
+		printf("Invalid input: %s", board_string2);
 		return;
 	}
 
-	printf("1st. combination: %s. 2nd. combination: %s. Expected: %d. Actual: %d\n", combination_string1, combination_string2, e, compare(combination1, combination2));
+	printf("1st. board: %s. 2nd. board: %s. Expected: %d. Actual: %d\n", board_string1, board_string2, e, compare(board1, board2));
 }
 
 void rank_tests()
@@ -138,7 +138,7 @@ void combination_tests()
 	}
 
 	bool more;
-	combination_info_t* info = initialize(deck, DECK_SIZE, COMBINATION_SIZE, BUFFER_SIZE);
+	combination_info_t* info = initialize(deck, DECK_SIZE, BOARD_SIZE, BUFFER_SIZE);
 	FILE* output = fopen("C:\\Users\\Gabriel\\Desktop\\combinations.txt", "w");
 
 	do

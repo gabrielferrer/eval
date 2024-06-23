@@ -1,7 +1,7 @@
 #ifndef POKER_H
 #define POKER_H
 
-#define COMBINATION_SIZE 5
+#define BOARD_SIZE 5
 
 typedef enum { HOLDEM, OMAHA, OMAHA5, OMAHA6 } rules_t;
 
@@ -13,6 +13,6 @@ typedef enum { HIGH_CARD = 1, PAIR, TWO_PAIR, THREE_OF_A_KIND, STRAIGHT, FLUSH, 
 
 typedef struct { rank_t rank; suit_t suit; } card_t;
 
-typedef card_t combination_t[COMBINATION_SIZE];
+typedef card_t board_t[BOARD_SIZE];
 
 #endif

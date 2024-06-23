@@ -77,9 +77,9 @@ char* hand_rank_to_string(hand_rank_t hand_rank)
 	return NULL;
 }
 
-bool string_to_combination(char* combination_string, combination_t combination)
+bool string_to_board(char* board_string, board_t board)
 {
-	if (strlen(combination_string) != 2 * COMBINATION_SIZE)
+	if (strlen(board_string) != 2 * BOARD_SIZE)
 	{
 		return false;
 	}
@@ -87,24 +87,24 @@ bool string_to_combination(char* combination_string, combination_t combination)
 	rank_t r;
 	suit_t s;
 
-	for (int i = 0, j = 0; j < COMBINATION_SIZE; j++)
+	for (int i = 0, j = 0; j < BOARD_SIZE; j++)
 	{
-		r = to_rank(combination_string[i++]);
+		r = to_rank(board_string[i++]);
 
 		if (r == NO_RANK)
 		{
 			return false;
 		}
 
-		s = to_suit(combination_string[i++]);
+		s = to_suit(board_string[i++]);
 
 		if (s == NO_SUIT)
 		{
 			return false;
 		}
 
-		combination[j].rank = r;
-		combination[j].suit = s;
+		board[j].rank = r;
+		board[j].suit = s;
 	}
 
 	return true;

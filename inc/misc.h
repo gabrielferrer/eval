@@ -13,7 +13,7 @@ char to_suit_string(suit_t s);
 
 char* hand_rank_to_string(hand_rank_t hand_rank);
 
-bool string_to_combination(char* combination_string, combination_t combination);
+bool string_to_board(char* board_string, board_t board);
 
 char* card_to_string(card_t* card, char* destination);
 

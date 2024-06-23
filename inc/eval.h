@@ -39,23 +39,23 @@ typedef struct { rank_t rank; int count; } group_t;
 
 typedef struct
 {
-	group_t groups[MAX_GROUPS];                   // Groups of cards.
-	int group_count;                              // How many groups of cards.
-	int consecutive_ranks;                        // How many cards with consecutive ranks.
-	int same_suit;                                // How many cards with same suit.
-	combination_t ordered_cards;                  // Ordered input cards.
-	hand_rank_t hand_rank;                        // Hand rank found.
-	group_t* low_pair;                            // Pointer into groups to low pair if hand rank is PAIR/TWO_PAIR/FULL_HOUSE.
-	group_t* high_pair;                           // Pointer into groups to high pair if hand rank is TWO_PAIR.
-	group_t* trips;                               // Pointer into groups to set of 3 cards if hand rank is THREE_OF_A_KIND/FULL_HOUSE.
-	group_t* four;                                // Pointer into groups to set of 4 cards if hand rank is FOUR_OF_A_KIND.
-	card_t* single_group_cards[COMBINATION_SIZE]; // Pointers to cards into ordered_cards that are single group.
-	int single_group_cards_count;                 // How many cards with single group.
+	group_t groups[MAX_GROUPS];             // Groups of cards.
+	int group_count;                        // How many groups of cards.
+	int consecutive_ranks;                  // How many cards with consecutive ranks.
+	int same_suit;                          // How many cards with same suit.
+	board_t ordered_cards;                  // Ordered input cards.
+	hand_rank_t hand_rank;                  // Hand rank found.
+	group_t* low_pair;                      // Pointer into groups to low pair if hand rank is PAIR/TWO_PAIR/FULL_HOUSE.
+	group_t* high_pair;                     // Pointer into groups to high pair if hand rank is TWO_PAIR.
+	group_t* trips;                         // Pointer into groups to set of 3 cards if hand rank is THREE_OF_A_KIND/FULL_HOUSE.
+	group_t* four;                          // Pointer into groups to set of 4 cards if hand rank is FOUR_OF_A_KIND.
+	card_t* single_group_cards[BOARD_SIZE]; // Pointers to cards into ordered_cards that are single group.
+	int single_group_cards_count;           // How many cards with single group.
 } hand_rank_result_t;
 
-void hand_rank(combination_t combination, hand_rank_result_t* result);
+void hand_rank(board_t board, hand_rank_result_t* result);
 
-int compare(combination_t combination1, combination_t combination2);
+int compare(board_t board1, board_t board2);
 
 bool eval(eval_t* eval_data);
 

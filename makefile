@@ -8,7 +8,7 @@ OBJS="$(OBJDIR)\tests.o" "$(OBJDIR)\eval.o" "$(OBJDIR)\enum.o" "$(OBJDIR)\misc.o
 CFLAGS=$(INCLUDE)
 
 ifdef DEBUG
-CFLAGS+=-g
+CFLAGS+=-g -DDEBUG
 endif
 
 tests: tests.o eval.o enum.o misc.o fsm.o cmbntn.o

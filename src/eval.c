@@ -1,6 +1,11 @@
 #include <stddef.h>
 #include <string.h>
 #include <stdlib.h>
+
+#ifdef DEBUG
+#include <stdio.h>
+#endif
+
 #include "eval.h"
 #include "enum.h"
 #include "misc.h"
@@ -10,15 +15,15 @@
 
 typedef struct
 {
-	combination_t* combinations;    // Temporary buffer for calculated combinations per board.
-	int combinations_count;         // How many combinations into buffer.
-	combination_t best_combination; // Best player's combination.
-	int wins;                       // How many combinations won.
-	int ties;                       // How many combinations tied.
+	board_t* boards;                // Temporary buffer for calculated boards.
+	int board_count;                // How many boards into buffer.
+	board_t best_board;             // Best player's board.
+	int wins;                       // How many boards won.
+	int ties;                       // How many boards tied.
 } player_info_t;
 
-combination_t temp_combination1;
-combination_t temp_combination2;
+board_t temp_board1;
+board_t temp_board2;
 hand_rank_result_t temp_result1;
 hand_rank_result_t temp_result2;
 
@@ -66,41 +71,41 @@ int get_player_combinations(rules_t rules)
 	return 0;
 }
 
-void calc_best_combination(rules_t rules, combination_t best_combination)
+void calc_best_board(rules_t rules, board_t best_board)
 {
-	combination_t current;
+	board_t current;
 
 	FSM_next(current);
-	// Initialize best combination.
-	memcpy(best_combination, current, sizeof(combination_t));
+	// Initialize best board.
+	memcpy(best_board, current, sizeof(board_t));
 
 	while (FSM_next(current))
 	{
-		int comparison = compare(current, best_combination);
+		int comparison = compare(current, best_board);
 
 		if (comparison <= 0)
 		{
 			continue;
 		}
 
-		memcpy(best_combination, current, sizeof(combination_t));
+		memcpy(best_board, current, sizeof(board_t));
 	}
 }
 
-void eval_players(eval_t* eval_data, player_info_t* players_info, combination_t* combinations_page, int page_entries)
+void eval_players(eval_t* eval_data, player_info_t* players_info, board_t* boards_page, int page_entries)
 {
 	player_info_t* best_players[MAX_PLAYERS];
 	int best_count = 0;
 
 	for (int i = 0; i < page_entries; i++)
 	{
-		FSM_reset_board_cards(combinations_page[i]);
+		FSM_reset_board_cards(boards_page[i]);
 
 		for (int j = 0; j < eval_data->players; j++)
 		{
 			FSM_reset_hole_cards(eval_data->hole_cards[j], eval_data->hole_cards_count);
 
-			calc_best_combination(eval_data->rules, players_info[j].best_combination);
+			calc_best_board(eval_data->rules, players_info[j].best_board);
 
 			if (best_count == 0)
 			{
@@ -108,7 +113,7 @@ void eval_players(eval_t* eval_data, player_info_t* players_info, combination_t*
 				continue;
 			}
 
-			int comparison = compare(best_players[0]->best_combination, players_info[j].best_combination);
+			int comparison = compare(best_players[0]->best_board, players_info[j].best_board);
 
 			if (comparison > 0)
 			{
@@ -210,16 +215,16 @@ void check_group(group_t* g, card_t* c, hand_rank_result_t* r)
 	}
 }
 
-bool straight_special_case(combination_t b)
+bool straight_special_case(board_t b)
 {
 	return b[0].rank == TWO && b[1].rank == THREE && b[2].rank == FOUR && b[3].rank == FIVE && b[4].rank == ACE;
 }
 
-void reorder_straight_special_case(combination_t b)
+void reorder_straight_special_case(board_t b)
 {
-	suit_t s = b[COMBINATION_SIZE - 1].suit;
+	suit_t s = b[BOARD_SIZE - 1].suit;
 
-	for (int i = COMBINATION_SIZE - 1; i > 0; i--)
+	for (int i = BOARD_SIZE - 1; i > 0; i--)
 	{
 		b[i].rank = b[i - 1].rank;
 		b[i].suit = b[i - 1].suit;
@@ -230,26 +235,26 @@ void reorder_straight_special_case(combination_t b)
 }
 
 /*
-	Calculate a given combination's rank.
+	Calculate a given board's rank.
 
 	[Returns]
 
 		Struct with information about the hand rank.
 */
-void hand_rank(combination_t combination, hand_rank_result_t* result)
+void hand_rank(board_t board, hand_rank_result_t* result)
 {
 	rank_t cr = NO_RANK;
 
 	memset(result, 0, sizeof(hand_rank_result_t));
 	result->group_count = -1;
-	memcpy(result->ordered_cards, combination, sizeof(combination_t));
-	qsort(result->ordered_cards, COMBINATION_SIZE, sizeof(card_t), compare_cards);
+	memcpy(result->ordered_cards, board, sizeof(board_t));
+	qsort(result->ordered_cards, BOARD_SIZE, sizeof(card_t), compare_cards);
 
 	int i = 0;
 
-	while (i < COMBINATION_SIZE)
+	while (i < BOARD_SIZE)
 	{
-		if (i + 1 < COMBINATION_SIZE)
+		if (i + 1 < BOARD_SIZE)
 		{
 			// Check consecutive ranks.
 			if (result->ordered_cards[i].rank + 1 == result->ordered_cards[i + 1].rank)
@@ -365,18 +370,18 @@ void hand_rank(combination_t combination, hand_rank_result_t* result)
 }
 
 /*
-	Compare to combinations.
+	Compare to boards.
 
 	[Returns]
 
-		-1, if first combination is ranked below second combination.
-		0, if both combinations are ranked equal.
-		1, if first combination is ranked above second combination.
+		-1, if first board is ranked below second board.
+		0, if both boards are ranked equal.
+		1, if first board is ranked above second board.
 */
-int compare(combination_t combination1, combination_t combination2)
+int compare(board_t board1, board_t board2)
 {
-	hand_rank(combination1, &temp_result1);
-	hand_rank(combination2, &temp_result2);
+	hand_rank(board1, &temp_result1);
+	hand_rank(board2, &temp_result2);
 
 	if (temp_result1.hand_rank < temp_result2.hand_rank)
 	{
@@ -491,7 +496,6 @@ bool eval(eval_t* eval_data)
 {
 	card_t deck[DECK_SIZE];
 	player_info_t* players_info;
-	int cards_count = DECK_SIZE;
 	eval_data->errors = 0;
 
 	// Initialize equities with invalid equities.
@@ -534,7 +538,6 @@ bool eval(eval_t* eval_data)
 
 		deck[j].rank = NO_RANK;
 		deck[j].suit = NO_SUIT;
-		--cards_count;
 	}
 
 	// Remove dead cards from deck.
@@ -550,7 +553,6 @@ bool eval(eval_t* eval_data)
 
 		deck[j].rank = NO_RANK;
 		deck[j].suit = NO_SUIT;
-		--cards_count;
 	}
 
 	// Remove hole cards from deck.
@@ -568,26 +570,34 @@ bool eval(eval_t* eval_data)
 
 			deck[k].rank = NO_RANK;
 			deck[k].suit = NO_SUIT;
-			--cards_count;
 		}
 	}
 
-	if (cards_count < COMBINATION_SIZE)
+	int cards_count = 0;
+	int source = cards_count + 1;
+
+	// Compact remaining cards.
+	while (source < DECK_SIZE)
+	{	
+		if (deck[cards_count].rank != NO_RANK)
+		{
+			++cards_count;
+		}
+		else if (deck[source].rank != NO_RANK)
+		{
+			deck[cards_count].rank = deck[source].rank;
+			deck[cards_count++].suit = deck[source].suit;
+			deck[source].rank = NO_RANK;
+			deck[source].suit = NO_SUIT;
+		}
+
+		++source;
+	}
+
+	if (cards_count < BOARD_SIZE)
 	{
 		eval_data->errors |= INSUFFICIENT_COMBINATION_CARDS;
 		return false;
-	}
-
-	card_t* cards = (card_t*)malloc(cards_count * sizeof(card_t));
-
-	// Compact remaining cards.
-	for (int i = 0, j = 0; i < DECK_SIZE; i++)
-	{
-		if (deck[i].rank != NO_RANK)
-		{
-			cards[j].rank = deck[i].rank;
-			cards[j++].suit = deck[i].suit;
-		}
 	}
 
 	int player_combinations = get_player_combinations(eval_data->rules);
@@ -602,12 +612,12 @@ bool eval(eval_t* eval_data)
 
 	for (int i = 0; i < eval_data->players; i++)
 	{
-		players_info[i].combinations = (combination_t*)malloc(player_combinations * sizeof(combination_t));
+		players_info[i].boards = (board_t*)malloc(player_combinations * sizeof(board_t));
 	}
 
-	int combination_size = COMBINATION_SIZE - eval_data->board_cards_count;
+	int combination_size = BOARD_SIZE - eval_data->board_cards_count;
 	int page_entries;
-	combination_t* combinations_page = (combination_t*)malloc(PAGE_SIZE * sizeof(combination_t));
+	board_t* boards_page = (board_t*)malloc(PAGE_SIZE * sizeof(board_t));
 
 	FSM_reset_rules(eval_data->rules);
 
@@ -615,13 +625,13 @@ bool eval(eval_t* eval_data)
 	{
 		page_entries = 1;
 
-		for (int i = 0; i < COMBINATION_SIZE; i++)
+		for (int i = 0; i < BOARD_SIZE; i++)
 		{
-			combinations_page[0][i].rank = eval_data->board_cards[i].rank;
-			combinations_page[0][i].suit = eval_data->board_cards[i].suit;
+			boards_page[0][i].rank = eval_data->board_cards[i].rank;
+			boards_page[0][i].suit = eval_data->board_cards[i].suit;
 		}
 
-		eval_players(eval_data, players_info, combinations_page, page_entries);
+		eval_players(eval_data, players_info, boards_page, page_entries);
 	}
 	else
 	{
@@ -634,52 +644,54 @@ bool eval(eval_t* eval_data)
 			done = combinations(info);
 			page_entries = 0;
 
-			while (page_entries < info->combination_count)
+			if (eval_data->board_cards_count == 0)
 			{
-				// Generate combination.
-				for (int i = 0; i < COMBINATION_SIZE; i++)
+				eval_players(eval_data, players_info, (board_t*)info->combination_buffer, info->combination_count);
+			}
+			else
+			{
+				while (page_entries < info->combination_count)
 				{
-					if (i < eval_data->board_cards_count)
+					// Generate combination.
+					for (int i = 0; i < BOARD_SIZE; i++)
 					{
-						// Take board card if any.
-						combinations_page[page_entries][i].rank = eval_data->board_cards[i].rank;
-						combinations_page[page_entries][i].suit = eval_data->board_cards[i].suit;
+						if (i < eval_data->board_cards_count)
+						{
+							// Take board card if any.
+							boards_page[page_entries][i].rank = eval_data->board_cards[i].rank;
+							boards_page[page_entries][i].suit = eval_data->board_cards[i].suit;
+						}
+						else
+						{
+							// Take remaining deck card to complete combination.
+							boards_page[page_entries][i].rank = info->combination_buffer[page_entries * combination_size + i].rank;
+							boards_page[page_entries][i].suit = info->combination_buffer[page_entries * combination_size + i].suit;
+						}
 					}
-					else
-					{
-						// Take remaining deck card to complete combination.
-						combinations_page[page_entries][i].rank = info->combination_buffer[page_entries * sizeof(combination_t) + i].rank;
-						combinations_page[page_entries][i].suit = info->combination_buffer[page_entries * sizeof(combination_t) + i].suit;
-					}
+
+					page_entries++;
 				}
 
-				page_entries++;
+				eval_players(eval_data, players_info, boards_page, page_entries);
 			}
-
-			eval_players(eval_data, players_info, combinations_page, page_entries);
 		}
 		while (!done);
 
 		dispose(info);
 	}
 
-	if (combinations_page)
+	if (boards_page)
 	{
-		free(combinations_page);
-	}
-
-	if (cards)
-	{
-		free(cards);
+		free(boards_page);
 	}
 	
 	if (players_info)
 	{
 		for (int i = 0; i < eval_data->players; i++)
 		{
-			if (players_info[i].combinations)
+			if (players_info[i].boards)
 			{
-				free(players_info[i].combinations);
+				free(players_info[i].boards);
 			}
 		}
 
