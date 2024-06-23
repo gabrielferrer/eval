@@ -2,49 +2,59 @@
 #include "cmbntn.h"
 #include "fsm.h"
 
-typedef void (*state_t)(board_t board);
+/*
+	Fills a new board.
+
+	[Returns]
+
+		True if this state returns a valid board, false if next state must be
+		called before returning a valid board.
+*/
+typedef bool (*state_t)(board_t board);
 
 int CardIndex;
 int Indexes[2];
 card_t HoleCards[6];
 int CardsCount;
 board_t BoardCards;
-state_t* CurrentStates;
-int CurrentState;
+state_t* States;
+int StatesCount = 0;
+int CurrentState = 0;
+bool holdem_0(board_t board);
+bool holdem_init_1a(board_t board);
+bool holdem_1(board_t board);
+bool init_holdem_1b(board_t board);
+bool init_holdem_2(board_t board);
+bool holdem_2(board_t board);
 
-void holdem_0(board_t board);
-void holdem_init_1a(board_t board);
-void holdem_1(board_t board);
-void init_holdem_1b(board_t board);
-void init_holdem_2(board_t board);
-void holdem_2(board_t board);
-
-void omaha_init(board_t board);
-void omaha(board_t board);
+bool omaha_init(board_t board);
+bool omaha(board_t board);
 
 state_t HoldemStates[] = { holdem_0, holdem_init_1a, holdem_1, init_holdem_1b, holdem_1, init_holdem_2, holdem_2 };
 
 state_t OmahaStates[] = { omaha_init, omaha };
 
-void holdem_0(board_t board)
+bool holdem_0(board_t board)
 {
 	memcpy(board, BoardCards, sizeof(board_t));
 	CurrentState++;
+	return true;
 }
 
-void holdem_init_1a(board_t board)
+bool holdem_init_1a(board_t board)
 {
 	CardIndex = 0;
 	Indexes[0] = 0;
 	CurrentState++;
+	return false;
 }
 
-void holdem_1(board_t board)
+bool holdem_1(board_t board)
 {
-	board[0].rank = HoleCards[CardsCount].rank;
-	board[0].suit = HoleCards[CardsCount].suit;
+	board[0].rank = HoleCards[CardIndex].rank;
+	board[0].suit = HoleCards[CardIndex].suit;
 
-	for (int s = 0, d = 1; d < sizeof(board_t); s++, d++)
+	for (int s = 0, d = 1; d < BOARD_SIZE; s++)
 	{
 		if (s == Indexes[0])
 		{
@@ -52,33 +62,37 @@ void holdem_1(board_t board)
 		}
 
 		board[d].rank = BoardCards[s].rank;
-		board[d].suit = BoardCards[s].suit;
+		board[d++].suit = BoardCards[s].suit;
 	}
 
 	Indexes[0]++;
 
-	if (Indexes[0] >= sizeof(board_t))
+	if (Indexes[0] == BOARD_SIZE)
 	{
 		CurrentState++;
 	}
+
+	return true;
 }
 
-void init_holdem_1b(board_t board)
+bool init_holdem_1b(board_t board)
 {
 	CardIndex = 1;
 	Indexes[0] = 0;
 	CurrentState++;
+	return false;
 }
 
-void init_holdem_2(board_t board)
+bool init_holdem_2(board_t board)
 {
 	CardIndex = 2;
 	Indexes[0] = 0;
 	Indexes[1] = 1;
 	CurrentState++;
+	return false;
 }
 
-void holdem_2(board_t board)
+bool holdem_2(board_t board)
 {
 	for (int i = 0; i < 2; i++)
 	{
@@ -86,7 +100,7 @@ void holdem_2(board_t board)
 		board[i].suit = BoardCards[Indexes[i]].suit;
 	}
 
-	for (int s = 0, d = 2; d < sizeof(board_t); s++, d++)
+	for (int s = 0, d = 2; d < BOARD_SIZE; s++)
 	{
 		if (s == Indexes[0] || s == Indexes[1])
 		{
@@ -94,32 +108,45 @@ void holdem_2(board_t board)
 		}
 
 		board[d].rank = BoardCards[s].rank;
-		board[d].suit = BoardCards[s].suit;
+		board[d++].suit = BoardCards[s].suit;
 	}
 
-	if (next(Indexes, 2, sizeof(board_t)))
+	if (next(Indexes, 2, BOARD_SIZE))
 	{
 		CurrentState++;
 	}
+
+	return true;
 }
 
-void omaha_init(board_t board)
+bool omaha_init(board_t board)
 {
+	return true;
 }
 
-void omaha(board_t board)
+bool omaha(board_t board)
 {
+	return true;
 }
 
 void FSM_reset_rules(rules_t rules)
 {
-	CurrentStates = rules == HOLDEM ? HoldemStates : OmahaStates;
+	if (rules == HOLDEM)
+	{
+		States = HoldemStates;
+		StatesCount = sizeof(HoldemStates) / sizeof(state_t);
+	} else
+	{
+		States = OmahaStates;
+		StatesCount = sizeof(OmahaStates) / sizeof(state_t);
+	}
+
 	CurrentState = 0;
 }
 
 void FSM_reset_hole_cards(card_t* hole_cards, int cards_count)
 {
-	memcpy(HoleCards, hole_cards, cards_count);
+	memcpy(HoleCards, hole_cards, cards_count * sizeof(card_t));
 	CardsCount = cards_count;
 	CurrentState = 0;
 }
@@ -132,12 +159,18 @@ void FSM_reset_board_cards(board_t board_cards)
 
 bool FSM_next(board_t board)
 {
-	if (CurrentState >= sizeof(CurrentStates))
+	if (CurrentState < 0 || CurrentState >= StatesCount)
 	{
 		return false;
 	}
 
-	CurrentStates[CurrentState](board);
+	bool done = false;
+
+	do
+	{
+		done = States[CurrentState](board);
+	}
+	while (!done && CurrentState < StatesCount);
 
 	return true;
 }
