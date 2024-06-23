@@ -19,7 +19,14 @@
 #define INVALID_BOARD_CARDS_COUNT 4
 #define INVALID_POKER_RULES 8
 
-typedef struct{ double win_percent; double lose_percent; double tie_percent; } equity_t;
+typedef struct
+{
+	int wins;
+	int ties;
+	double win_percent;
+	double lose_percent;
+	double tie_percent;
+} equity_t;
 
 typedef struct
 {
@@ -32,6 +39,7 @@ typedef struct
 	card_t* hole_cards[MAX_PLAYERS];
 	card_t* dead_cards;
 	equity_t equities[MAX_PLAYERS];
+	int total_boards;
 	int errors;
 } eval_t;
 
