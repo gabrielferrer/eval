@@ -632,13 +632,13 @@ bool eval(eval_t* eval_data)
 	}
 	else
 	{
-		bool done = false;
+		bool more = false;
 
 		combination_info_t* info = initialize(deck, cards_count, combination_size, PAGE_SIZE);
 
 		do
 		{
-			done = combinations(info);
+			more = combinations(info);
 			eval_data->total_boards += info->combination_count;
 			page_entries = 0;
 
@@ -673,7 +673,7 @@ bool eval(eval_t* eval_data)
 				eval_players(eval_data, boards_page, page_entries);
 			}
 		}
-		while (!done);
+		while (more);
 
 		dispose(info);
 	}

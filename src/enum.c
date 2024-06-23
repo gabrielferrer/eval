@@ -21,14 +21,14 @@ combination_info_t* initialize(card_t* set, int set_size, int combination_size, 
 	info->set = set;
 	info->set_size = set_size;
 	info->combination_size = combination_size;
-	info->combination_bytes = (combination_size == 0 ? set_size : info->combination_size) * sizeof(card_t);
-	info->indexes = combination_size == 0 ? NULL : (int*)malloc(info->combination_size * sizeof(int));
+	info->combination_bytes = (combination_size == 0 ? set_size : combination_size) * sizeof(card_t);
+	info->indexes = combination_size == 0 ? NULL : (int*)malloc(combination_size * sizeof(int));
 	info->combination_buffer = (card_t*)malloc((combination_size == 0 ? set_size : combination_size * buffer_size) * sizeof(card_t));
 	info->buffer_size = combination_size == 0 ? 1 : buffer_size;
 	info->current_combination = combination_size == 0 ? NULL : (card_t*)malloc(combination_size * sizeof(card_t));
 
 	// Initialize indexes to point to first elements.
-	for (int i = 0; i < info->combination_size; i++)
+	for (int i = 0; i < combination_size; i++)
 	{
 		info->indexes[i] = i;
 	}
