@@ -213,21 +213,3 @@ int main()
 	//combination_tests();
 	eval_tests();
 }
-
-// #ifdef DEBUG
-	// char card_buffer[3];
-	// FILE* output = fopen("C:\\Users\\Gabriel\\Desktop\\boards.txt", "w");
-	// for (int i = 0; i < BOARD_SIZE; i++)
-	// {
-		// card_to_string(&board1[i], card_buffer);
-		// fwrite(card_buffer, 1, 2, output);
-	// }
-	// fwrite("\n", 1, 1, output);
-	// for (int i = 0; i < BOARD_SIZE; i++)
-	// {
-		// card_to_string(&board2[i], card_buffer);
-		// fwrite(card_buffer, 1, 2, output);
-	// }
-	// fwrite("\n", 1, 1, output);
-	// fclose (output);
-// #endif

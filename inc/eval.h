@@ -23,9 +23,9 @@ typedef struct
 {
 	int wins;
 	int ties;
-	double win_percent;
-	double lose_percent;
-	double tie_percent;
+	double win_probability;
+	double lose_probability;
+	double tie_probability;
 } equity_t;
 
 typedef struct

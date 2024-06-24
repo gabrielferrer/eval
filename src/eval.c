@@ -504,9 +504,9 @@ bool eval(eval_t* eval_data)
 	{
 		eval_data->equities[i].wins = 0;
 		eval_data->equities[i].ties = 0;
-		eval_data->equities[i].win_percent = -1;
-		eval_data->equities[i].lose_percent = -1;
-		eval_data->equities[i].tie_percent = -1;
+		eval_data->equities[i].win_probability = -1;
+		eval_data->equities[i].lose_probability = -1;
+		eval_data->equities[i].tie_probability = -1;
 	}
 
 	if (eval_data->board_cards_count < 0 || eval_data->board_cards_count == 1 || eval_data->board_cards_count == 2 || eval_data->board_cards_count > 5)
@@ -674,6 +674,14 @@ bool eval(eval_t* eval_data)
 			}
 		}
 		while (more);
+
+		for (int i = 0; i < eval_data->players; i++)
+		{
+			int loses = eval_data->total_boards - eval_data->equities[i].wins - eval_data->equities[i].ties;
+			eval_data->equities[i].win_probability = (double)eval_data->equities[i].wins / (double)eval_data->total_boards;
+			eval_data->equities[i].tie_probability = (double)eval_data->equities[i].ties / (double)eval_data->total_boards;
+			eval_data->equities[i].lose_probability = (double)loses / (double)eval_data->total_boards;
+		}
 
 		dispose(info);
 	}
