@@ -1,6 +1,5 @@
 #include <stdlib.h>
 #include <string.h>
-#include "poker.h"
 #include "misc.h"
 
 rank_t to_rank(char r)
@@ -77,37 +76,44 @@ char* hand_rank_to_string(hand_rank_t hand_rank)
 	return NULL;
 }
 
-bool string_to_board(char* board_string, board_t board)
+card_t* string_to_cards(char* board_string, card_t* cards)
 {
-	if (strlen(board_string) != 2 * BOARD_SIZE)
+	if (board_string == NULL)
 	{
-		return false;
+		return NULL;
+	}
+
+	int length = strlen(board_string);
+
+	if (length % 2 != 0)
+	{
+		return NULL;
 	}
 
 	rank_t r;
 	suit_t s;
 
-	for (int i = 0, j = 0; j < BOARD_SIZE; j++)
+	for (int i = 0, j = 0; i < length; j++)
 	{
 		r = to_rank(board_string[i++]);
 
 		if (r == NO_RANK)
 		{
-			return false;
+			return NULL;
 		}
 
 		s = to_suit(board_string[i++]);
 
 		if (s == NO_SUIT)
 		{
-			return false;
+			return NULL;
 		}
 
-		board[j].rank = r;
-		board[j].suit = s;
+		cards[j].rank = r;
+		cards[j].suit = s;
 	}
 
-	return true;
+	return cards;
 }
 
 char* card_to_string(card_t* card, char* destination)

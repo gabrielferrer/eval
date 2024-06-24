@@ -1,12 +1,15 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <stdarg.h>
 #include "enum.h"
 #include "eval.h"
 #include "misc.h"
 
 #define BUFFER_SIZE 10000
-#define PLAYERS 2
+
+typedef struct { double e_win; double e_lose; double e_tie; } eq_t;
 
 hand_rank_result_t r;
 
@@ -15,7 +18,7 @@ void hand_rank_test(char* board_string, hand_rank_t hr)
 	board_t board;
 	hand_rank_result_t result;
 
-	if (!string_to_board(board_string, board))
+	if (string_to_cards(board_string, board) == NULL)
 	{
 		printf("Invalid input: %s", board_string);
 		return;
@@ -33,19 +36,91 @@ void compare_test(char* board_string1, char* board_string2, int e)
 	hand_rank_result_t result1;
 	hand_rank_result_t result2;
 
-	if (!string_to_board(board_string1, board1))
+	if (string_to_cards(board_string1, board1) == NULL)
 	{
 		printf("Invalid input: %s", board_string1);
 		return;
 	}
 
-	if (!string_to_board(board_string2, board2))
+	if (string_to_cards(board_string2, board2) == NULL)
 	{
 		printf("Invalid input: %s", board_string2);
 		return;
 	}
 
 	printf("1st. board: %s. 2nd. board: %s. Expected: %d. Actual: %d\n", board_string1, board_string2, e, compare(board1, board2));
+}
+
+void eval_test(rules_t rules, int players, char* board_cards, char* dead_cards, ...)
+{
+	va_list valist;
+	eval_t eval_data;
+	board_t board;
+	card_t dead[DECK_SIZE];
+	card_t hole[MAX_PLAYERS * 6];
+	eq_t equities[MAX_PLAYERS];
+
+	eval_data.rules = rules;
+	eval_data.players = players;
+	eval_data.board_cards = string_to_cards(board_cards, board);
+	eval_data.dead_cards = string_to_cards(dead_cards, dead);
+
+	eval_data.board_cards_count = eval_data.board_cards != NULL ? sizeof(eval_data.board_cards) / sizeof(card_t) : 0;
+	eval_data.dead_cards_count = eval_data.dead_cards != NULL ? sizeof(eval_data.dead_cards) / sizeof(card_t) : 0;
+
+	va_start(valist, dead_cards);
+
+	eval_data.hole_cards_count = 0;
+
+	for (int i = 0; i < players; i++)
+	{
+		char* hole_cards = va_arg(valist, char*);
+		eval_data.hole_cards[i]	= &hole[i * 6];
+		string_to_cards(hole_cards, eval_data.hole_cards[i]);
+
+		if (hole_cards != NULL && eval_data.hole_cards_count == 0)
+		{
+			eval_data.hole_cards_count = strlen(hole_cards) / 2;
+		}
+	}
+
+	for (int i = 0; i < players; i++)
+	{
+		equities[i].e_win = va_arg(valist, double);
+		equities[i].e_lose = va_arg(valist, double);
+		equities[i].e_tie = va_arg(valist, double);
+	}
+
+	va_end(valist);
+
+	eval(&eval_data);
+
+	if (eval_data.errors & DUPLICATED_CARD_FLAG)
+	{
+		printf ("Duplicated card.");
+	}
+
+	if (eval_data.errors & INSUFFICIENT_COMBINATION_CARDS)
+	{
+		printf ("Insufficient combination cards.");
+	}
+
+	if (eval_data.errors & INVALID_BOARD_CARDS_COUNT)
+	{
+		printf ("Invalid board cards count.");
+	}
+
+	if (eval_data.errors & INVALID_POKER_RULES)
+	{
+		printf ("Invalid poker rules.");
+	}
+
+	for (int i = 0; i < players; i++)
+	{
+		printf("Equity win (expected, actual): (%f, %f)\n", equities[i].e_win, eval_data.equities[i].win_probability * 100.0d);
+		printf("Equity lose (expected, actual): (%f, %f)\n", equities[i].e_lose, eval_data.equities[i].lose_probability * 100.0d);
+		printf("Equity tie (expected, actual): (%f, %f)\n", equities[i].e_tie, eval_data.equities[i].tie_probability * 100.0d);
+	}
 }
 
 void rank_tests()
@@ -166,44 +241,7 @@ void combination_tests()
 
 void eval_tests()
 {
-	eval_t eval_data;
-	card_t hole_cards[2][2] =
-	{
-		{ { THREE, HEARTS }, { FIVE, HEARTS } },
-		{ { TEN, SPADES }, { TWO, CLUBS } }
-	};
-
-	eval_data.rules = HOLDEM;
-	eval_data.players = PLAYERS;
-	eval_data.board_cards = NULL;
-	eval_data.dead_cards = NULL;
-	eval_data.hole_cards[0] = hole_cards[0];
-	eval_data.hole_cards[1] = hole_cards[1];
-	eval_data.board_cards_count = eval_data.board_cards != NULL ? sizeof(eval_data.board_cards) / sizeof(card_t) : 0;
-	eval_data.dead_cards_count = eval_data.dead_cards != NULL ? sizeof(eval_data.dead_cards) / sizeof(card_t) : 0;
-	eval_data.hole_cards_count = 2;
-
-	eval(&eval_data);
-
-	if (eval_data.errors & DUPLICATED_CARD_FLAG)
-	{
-		printf ("Duplicated card.");
-	}
-
-	if (eval_data.errors & INSUFFICIENT_COMBINATION_CARDS)
-	{
-		printf ("Insufficient combination cards.");
-	}
-
-	if (eval_data.errors & INVALID_BOARD_CARDS_COUNT)
-	{
-		printf ("Invalid board cards count.");
-	}
-
-	if (eval_data.errors & INVALID_POKER_RULES)
-	{
-		printf ("Invalid poker rules.");
-	}
+	eval_test(HOLDEM, 2, NULL, NULL, "3h5h", "Ts2c", 46.06d, 51.92d, 2.02d, 51.92d, 46.06d, 2.02d);
 }
 
 int main()
