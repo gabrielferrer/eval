@@ -621,13 +621,7 @@ bool eval(eval_t* eval_data)
 	{
 		page_entries = 1;
 		eval_data->total_boards += page_entries;
-
-		for (int i = 0; i < BOARD_SIZE; i++)
-		{
-			boards_page[0][i].rank = eval_data->board_cards[i].rank;
-			boards_page[0][i].suit = eval_data->board_cards[i].suit;
-		}
-
+		memcpy(boards_page[0], eval_data->board_cards, sizeof(board_t));
 		eval_players(eval_data, boards_page, page_entries);
 	}
 	else
@@ -675,15 +669,15 @@ bool eval(eval_t* eval_data)
 		}
 		while (more);
 
-		for (int i = 0; i < eval_data->players; i++)
-		{
-			int loses = eval_data->total_boards - eval_data->equities[i].wins - eval_data->equities[i].ties;
-			eval_data->equities[i].win_probability = (double)eval_data->equities[i].wins / (double)eval_data->total_boards;
-			eval_data->equities[i].tie_probability = (double)eval_data->equities[i].ties / (double)eval_data->total_boards;
-			eval_data->equities[i].lose_probability = (double)loses / (double)eval_data->total_boards;
-		}
-
 		dispose(info);
+	}
+
+	for (int i = 0; i < eval_data->players; i++)
+	{
+		int loses = eval_data->total_boards - eval_data->equities[i].wins - eval_data->equities[i].ties;
+		eval_data->equities[i].win_probability = (double)eval_data->equities[i].wins / (double)eval_data->total_boards;
+		eval_data->equities[i].tie_probability = (double)eval_data->equities[i].ties / (double)eval_data->total_boards;
+		eval_data->equities[i].lose_probability = (double)loses / (double)eval_data->total_boards;
 	}
 
 	if (boards_page)

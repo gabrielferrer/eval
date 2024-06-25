@@ -65,8 +65,8 @@ void eval_test(rules_t rules, int players, char* board_cards, char* dead_cards, 
 	eval_data.board_cards = string_to_cards(board_cards, board);
 	eval_data.dead_cards = string_to_cards(dead_cards, dead);
 
-	eval_data.board_cards_count = eval_data.board_cards != NULL ? sizeof(eval_data.board_cards) / sizeof(card_t) : 0;
-	eval_data.dead_cards_count = eval_data.dead_cards != NULL ? sizeof(eval_data.dead_cards) / sizeof(card_t) : 0;
+	eval_data.board_cards_count = board_cards != NULL ? strlen(board_cards) / 2 : 0;
+	eval_data.dead_cards_count = dead_cards != NULL ? strlen(dead_cards) / 2 : 0;
 
 	va_start(valist, dead_cards);
 
@@ -95,31 +95,38 @@ void eval_test(rules_t rules, int players, char* board_cards, char* dead_cards, 
 
 	eval(&eval_data);
 
-	if (eval_data.errors & DUPLICATED_CARD_FLAG)
+	if (eval_data.errors != 0)
 	{
-		printf ("Duplicated card.");
-	}
+		if (eval_data.errors & DUPLICATED_CARD_FLAG)
+		{
+			printf ("Duplicated card.\n");
+		}
 
-	if (eval_data.errors & INSUFFICIENT_COMBINATION_CARDS)
-	{
-		printf ("Insufficient combination cards.");
-	}
+		if (eval_data.errors & INSUFFICIENT_COMBINATION_CARDS)
+		{
+			printf ("Insufficient combination cards.\n");
+		}
 
-	if (eval_data.errors & INVALID_BOARD_CARDS_COUNT)
-	{
-		printf ("Invalid board cards count.");
-	}
+		if (eval_data.errors & INVALID_BOARD_CARDS_COUNT)
+		{
+			printf ("Invalid board cards count.\n");
+		}
 
-	if (eval_data.errors & INVALID_POKER_RULES)
-	{
-		printf ("Invalid poker rules.");
+		if (eval_data.errors & INVALID_POKER_RULES)
+		{
+			printf ("Invalid poker rules.\n");
+		}
+
+		return;
 	}
 
 	for (int i = 0; i < players; i++)
 	{
-		printf("Equity win (expected, actual): (%f, %f)\n", equities[i].e_win, eval_data.equities[i].win_probability * 100.0d);
-		printf("Equity lose (expected, actual): (%f, %f)\n", equities[i].e_lose, eval_data.equities[i].lose_probability * 100.0d);
-		printf("Equity tie (expected, actual): (%f, %f)\n", equities[i].e_tie, eval_data.equities[i].tie_probability * 100.0d);
+		printf("Equity for player %i (expected, actual):\n", i);
+		printf("\twin:  (%f, %f)\n", equities[i].e_win, eval_data.equities[i].win_probability * 100.0d);
+		printf("\tlose: (%f, %f)\n", equities[i].e_lose, eval_data.equities[i].lose_probability * 100.0d);
+		printf("\ttie:  (%f, %f)\n", equities[i].e_tie, eval_data.equities[i].tie_probability * 100.0d);
+		printf("\n");
 	}
 }
 
@@ -241,7 +248,8 @@ void combination_tests()
 
 void eval_tests()
 {
-	eval_test(HOLDEM, 2, NULL, NULL, "3h5h", "Ts2c", 46.06d, 51.92d, 2.02d, 51.92d, 46.06d, 2.02d);
+	eval_test(HOLDEM, 2, "KsAc2s3c7d", NULL, "3h5h", "Ts2c", 100.0d, 0.0d, 0.0d, 0.0d, 100.0d, 0.0d);
+	//eval_test(HOLDEM, 2, NULL, NULL, "3h5h", "Ts2c", 46.06d, 51.92d, 2.02d, 51.92d, 46.06d, 2.02d);
 }
 
 int main()
