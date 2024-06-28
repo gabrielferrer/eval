@@ -51,18 +51,18 @@ bool holdem_init_1a(board_t board)
 
 bool holdem_1(board_t board)
 {
-	board[0].rank = HoleCards[CardIndex].rank;
-	board[0].suit = HoleCards[CardIndex].suit;
+	board[Indexes[0]].rank = HoleCards[CardIndex].rank;
+	board[Indexes[0]].suit = HoleCards[CardIndex].suit;
 
-	for (int s = 0, d = 1; d < BOARD_SIZE; s++)
+	for (int i = 0; i < BOARD_SIZE; i++)
 	{
-		if (s == Indexes[0])
+		if (i == Indexes[0])
 		{
 			continue;
 		}
 
-		board[d].rank = BoardCards[s].rank;
-		board[d++].suit = BoardCards[s].suit;
+		board[i].rank = BoardCards[i].rank;
+		board[i].suit = BoardCards[i].suit;
 	}
 
 	Indexes[0]++;
@@ -94,24 +94,24 @@ bool init_holdem_2(board_t board)
 
 bool holdem_2(board_t board)
 {
-	for (int i = 0; i < 2; i++)
+	for (int i = 0; i < CardsCount; i++)
 	{
-		board[i].rank = BoardCards[Indexes[i]].rank;
-		board[i].suit = BoardCards[Indexes[i]].suit;
+		board[Indexes[i]].rank = HoleCards[i].rank;
+		board[Indexes[i]].suit = HoleCards[i].suit;
 	}
 
-	for (int s = 0, d = 2; d < BOARD_SIZE; s++)
+	for (int i = 0; i < BOARD_SIZE; i++)
 	{
-		if (s == Indexes[0] || s == Indexes[1])
+		if (i == Indexes[0] || i == Indexes[1])
 		{
 			continue;
 		}
 
-		board[d].rank = BoardCards[s].rank;
-		board[d++].suit = BoardCards[s].suit;
+		board[i].rank = BoardCards[i].rank;
+		board[i].suit = BoardCards[i].suit;
 	}
 
-	if (next(Indexes, 2, BOARD_SIZE))
+	if (next(Indexes, CardsCount, BOARD_SIZE))
 	{
 		CurrentState++;
 	}
