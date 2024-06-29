@@ -60,6 +60,7 @@ void eval_test(rules_t rules, int players, char* board_cards, char* dead_cards, 
 	card_t dead[DECK_SIZE];
 	card_t hole[MAX_PLAYERS * 6];
 	eq_t equities[MAX_PLAYERS];
+	char card_buffer[3];
 
 	eval_data.rules = rules;
 	eval_data.players = players;
@@ -123,10 +124,20 @@ void eval_test(rules_t rules, int players, char* board_cards, char* dead_cards, 
 
 	for (int i = 0; i < players; i++)
 	{
-		printf("Equity for player %i (expected, actual):\n", i);
-		printf("\twin:  (%f, %f)\n", equities[i].e_win, eval_data.equities[i].win_probability * 100.0d);
-		printf("\tlose: (%f, %f)\n", equities[i].e_lose, eval_data.equities[i].lose_probability * 100.0d);
-		printf("\ttie:  (%f, %f)\n", equities[i].e_tie, eval_data.equities[i].tie_probability * 100.0d);
+		int loses = eval_data.total_boards - eval_data.equities[i].wins - eval_data.equities[i].ties;
+		printf("Data for player %i (", i);
+
+		for (int j = 0; j < eval_data.hole_cards_count; j++)
+		{
+			card_to_string(&eval_data.hole_cards[i][j], card_buffer);
+			printf("%s", card_buffer);
+		}
+
+		printf(")\n");
+		printf("\tWins: %i, loses: %i, ties: %i\n", eval_data.equities[i].wins, loses, eval_data.equities[i].ties);
+		printf("\tEq. win:  (%f, %f)\n", equities[i].e_win, eval_data.equities[i].win_probability * 100.0d);
+		printf("\tEq. lose: (%f, %f)\n", equities[i].e_lose, eval_data.equities[i].lose_probability * 100.0d);
+		printf("\tEq. tie:  (%f, %f)\n", equities[i].e_tie, eval_data.equities[i].tie_probability * 100.0d);
 		printf("\n");
 	}
 }
