@@ -3,7 +3,7 @@
 #include <stdlib.h>
 
 #ifdef DEBUG
-#include <stdio.h>
+#include "debug.h"
 #endif
 
 #include "eval.h"
@@ -117,6 +117,9 @@ void eval_players(eval_t* eval_data, board_t* boards_page, int page_entries)
 
 			if (comparison > 0)
 			{
+#ifdef DEBUG
+				D_write_boards("C:\\Users\\Gabriel\\Desktop\\log.txt", temp_player_info[0].best_board, best_board);
+#endif
 				continue;
 			}
 
@@ -126,7 +129,9 @@ void eval_players(eval_t* eval_data, board_t* boards_page, int page_entries)
 				temp_player_info[best_count++].player_index = j;
 				continue;
 			}
-
+#ifdef DEBUG
+				D_write_boards("C:\\Users\\Gabriel\\Desktop\\log.txt", best_board, temp_player_info[0].best_board);
+#endif
 			best_count = 0;
 			memcpy(temp_player_info[best_count].best_board, best_board, sizeof(board_t));
 			temp_player_info[best_count++].player_index = j;
@@ -633,6 +638,9 @@ bool eval(eval_t* eval_data)
 
 			if (eval_data->board_cards_count == 0)
 			{
+#ifdef DEBUG
+				D_write("C:\\Users\\Gabriel\\Desktop\\boards.txt", (board_t*)info->combination_buffer, info->combination_count);
+#endif
 				eval_players(eval_data, (board_t*)info->combination_buffer, info->combination_count);
 			}
 			else
@@ -640,7 +648,7 @@ bool eval(eval_t* eval_data)
 				while (page_entries < info->combination_count)
 				{
 					// Generate combination.
-					for (int i = 0; i < BOARD_SIZE; i++)
+					for (int i = 0, j = 0; i < BOARD_SIZE; i++)
 					{
 						if (i < eval_data->board_cards_count)
 						{
@@ -651,14 +659,16 @@ bool eval(eval_t* eval_data)
 						else
 						{
 							// Take remaining deck card to complete combination.
-							boards_page[page_entries][i].rank = info->combination_buffer[page_entries * combination_size + i].rank;
-							boards_page[page_entries][i].suit = info->combination_buffer[page_entries * combination_size + i].suit;
+							boards_page[page_entries][i].rank = info->combination_buffer[page_entries * combination_size + j].rank;
+							boards_page[page_entries][i].suit = info->combination_buffer[page_entries * combination_size + j++].suit;
 						}
 					}
 
 					page_entries++;
 				}
-
+#ifdef DEBUG
+				D_write("C:\\Users\\Gabriel\\Desktop\\boards.txt", boards_page, page_entries);
+#endif
 				eval_players(eval_data, boards_page, page_entries);
 			}
 		}
