@@ -252,6 +252,11 @@ void hand_rank(board_t board, hand_rank_result_t* result)
 	memcpy(result->ordered_cards, board, sizeof(board_t));
 	qsort(result->ordered_cards, BOARD_SIZE, sizeof(card_t), compare_cards);
 
+	if (straight_special_case(result->ordered_cards))
+	{
+		reorder_straight_special_case(result->ordered_cards);
+	}
+
 	int i = 0;
 
 	while (i < BOARD_SIZE)
@@ -344,21 +349,11 @@ void hand_rank(board_t board, hand_rank_result_t* result)
 	}
 	else if ((result->consecutive_ranks == 4) && result->same_suit == 4)
 	{
-		if (straight_special_case(result->ordered_cards))
-		{
-			reorder_straight_special_case(result->ordered_cards);
-		}
-
 		result->hand_rank = STRAIGHT_FLUSH;
 		return;
 	}
 	else if (result->consecutive_ranks == 4)
 	{
-		if (straight_special_case(result->ordered_cards))
-		{
-			reorder_straight_special_case(result->ordered_cards);
-		}
-
 		result->hand_rank = STRAIGHT;
 		return;
 	}
