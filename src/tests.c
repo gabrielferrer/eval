@@ -231,40 +231,11 @@ void comparation_tests()
 	compare_test("KhJhQhThAh", "JcQcTcAcKc", 0);
 }
 
-// void logger()
-// {
-	// board_t board;
-	// card_t hole_cards[2];
-	// char card_buffer[3];
-
-	// FILE* output = fopen("C:\\Users\\Gabriel\\Desktop\\log.txt", "w");
-
-	// string_to_cards("KsAc2s3c7d", board);
-	// string_to_cards("Ts2c", hole_cards);
-
-	// FSM_reset_rules(HOLDEM);
-	// FSM_reset_board_cards(board);
-	// FSM_reset_hole_cards(hole_cards, 2);
-
-	// while (FSM_next(board))
-	// {
-		// for (int i = 0; i < BOARD_SIZE; i++)
-		// {
-			// card_to_string(&board[i], card_buffer);
-			// fwrite(card_buffer, 1, 2, output);
-		// }
-
-		// fwrite("\n", 1, 1, output);
-	// }
-
-	// fclose(output);
-// }
-
 void eval_tests()
 {
-	eval_test(HOLDEM, 2, "KsAc2s3c7d", NULL, "3h5h", "Ts2c", 100.0d, 0.0d, 0.0d, 0.0d, 100.0d, 0.0d);
-	eval_test(HOLDEM, 2, "KsAc2s3c", NULL, "3h5h", "Ts2c", 88.64d, 11.36d, 0.0d, 11.36d, 88.64d, 0.0d);
-	eval_test(HOLDEM, 2, "KsAc2s", NULL, "3h5h", "Ts2c", 34.44d, 65.56d, 0.0d, 65.56d, 34.44d, 0.0d);
+	//eval_test(HOLDEM, 2, "KsAc2s3c7d", NULL, "3h5h", "Ts2c", 100.0d, 0.0d, 0.0d, 0.0d, 100.0d, 0.0d);
+	//eval_test(HOLDEM, 2, "KsAc2s3c", NULL, "3h5h", "Ts2c", 88.64d, 11.36d, 0.0d, 11.36d, 88.64d, 0.0d);
+	//eval_test(HOLDEM, 2, "KsAc2s", NULL, "3h5h", "Ts2c", 34.44d, 65.56d, 0.0d, 65.56d, 34.44d, 0.0d);
 	eval_test(HOLDEM, 2, NULL, NULL, "3h5h", "Ts2c", 46.06d, 51.92d, 2.02d, 51.92d, 46.06d, 2.02d);
 }
 
@@ -274,5 +245,5 @@ int main()
 	//comparation_tests();
 	//combination_tests();
 	eval_tests();
-	//logger();
+	//compare_test("3h3c4c4d4h", "2d2c4c4d4h", 1);
 }
