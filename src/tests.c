@@ -122,18 +122,34 @@ void eval_test(rules_t rules, int players, char* board_cards, char* dead_cards, 
 		return;
 	}
 
+	printf("Board: ");
+
+	for (int i = 0; i < eval_data.board_cards_count; i++)
+	{
+		card_to_string(&eval_data.board_cards[i], card_buffer);
+		printf("%s", card_buffer);
+
+		if (i + 1 < eval_data.board_cards_count)
+		{
+			printf(" ");
+		}
+	}
+
+	printf("\n");
+
 	for (int i = 0; i < players; i++)
 	{
 		int loses = eval_data.total_boards - eval_data.equities[i].wins - eval_data.equities[i].ties;
-		printf("Data for player %i (", i);
+		printf("Data for player %i [", i);
 
 		for (int j = 0; j < eval_data.hole_cards_count; j++)
 		{
 			card_to_string(&eval_data.hole_cards[i][j], card_buffer);
 			printf("%s", card_buffer);
+			printf(j + 1 < eval_data.hole_cards_count ? " " : "]");
 		}
 
-		printf(")\n");
+		printf("\n");
 		printf("\tWins: %i, loses: %i, ties: %i\n", eval_data.equities[i].wins, loses, eval_data.equities[i].ties);
 		printf("\tEquity (expected, actual):\n");
 		printf("\twin:  (%f, %f)\n", equities[i].e_win, eval_data.equities[i].win_probability * 100.0d);
@@ -215,82 +231,41 @@ void comparation_tests()
 	compare_test("KhJhQhThAh", "JcQcTcAcKc", 0);
 }
 
-//void print_combinations()
-//{
-	//card_t deck[DECK_SIZE];
-	//char card_buffer[3];
+// void logger()
+// {
+	// board_t board;
+	// card_t hole_cards[2];
+	// char card_buffer[3];
 
-	// Initialize deck.
-	// Ranks must be first, then suits for INDEX to work.
-	//for (rank_t r = TWO; r <= ACE; r++)
-	//{
-	//	for (suit_t s = CLUBS; s <= SPADES; s++)
-	//	{
-	//		int i = INDEX(r, s);
-	//		deck[i].rank = r;
-	//		deck[i].suit = s;
-	//	}
-	//}
+	// FILE* output = fopen("C:\\Users\\Gabriel\\Desktop\\log.txt", "w");
 
-	//bool more;
-	//combination_info_t* info = initialize(deck, DECK_SIZE, BOARD_SIZE, BUFFER_SIZE);
+	// string_to_cards("KsAc2s3c7d", board);
+	// string_to_cards("Ts2c", hole_cards);
 
-	//do
-	//{
-	//	more = combinations(info);
+	// FSM_reset_rules(HOLDEM);
+	// FSM_reset_board_cards(board);
+	// FSM_reset_hole_cards(hole_cards, 2);
 
-	//	for (int i = 0; i < info->combination_count; i++)
-	//	{
-	//		for (int j = 0; j < info->combination_size; j++)
-	//		{
-	//			card_to_string(&info->combination_buffer[i * info->combination_size + j], card_buffer);
-				//printf("%s", card_buffer);
-	//			fwrite(card_buffer, 1, 2, output);
-	//		}
+	// while (FSM_next(board))
+	// {
+		// for (int i = 0; i < BOARD_SIZE; i++)
+		// {
+			// card_to_string(&board[i], card_buffer);
+			// fwrite(card_buffer, 1, 2, output);
+		// }
 
-			//printf("\n");
-	//		fwrite("\n", 1, 1, output);
-	//	}
-	//}
-	//while (more);
+		// fwrite("\n", 1, 1, output);
+	// }
 
-	//dispose(info);
-//}
-
-void logger()
-{
-	board_t board;
-	card_t hole_cards[2];
-	char card_buffer[3];
-
-	FILE* output = fopen("C:\\Users\\Gabriel\\Desktop\\log.txt", "w");
-
-	string_to_cards("KsAc2s3c7d", board);
-	string_to_cards("Ts2c", hole_cards);
-
-	FSM_reset_rules(HOLDEM);
-	FSM_reset_board_cards(board);
-	FSM_reset_hole_cards(hole_cards, 2);
-
-	while (FSM_next(board))
-	{
-		for (int i = 0; i < BOARD_SIZE; i++)
-		{
-			card_to_string(&board[i], card_buffer);
-			fwrite(card_buffer, 1, 2, output);
-		}
-
-		fwrite("\n", 1, 1, output);
-	}
-
-	fclose(output);
-}
+	// fclose(output);
+// }
 
 void eval_tests()
 {
-	//eval_test(HOLDEM, 2, "KsAc2s3c7d", NULL, "3h5h", "Ts2c", 100.0d, 0.0d, 0.0d, 0.0d, 100.0d, 0.0d);
-	//eval_test(HOLDEM, 2, NULL, NULL, "3h5h", "Ts2c", 46.06d, 51.92d, 2.02d, 51.92d, 46.06d, 2.02d);
+	eval_test(HOLDEM, 2, "KsAc2s3c7d", NULL, "3h5h", "Ts2c", 100.0d, 0.0d, 0.0d, 0.0d, 100.0d, 0.0d);
 	eval_test(HOLDEM, 2, "KsAc2s3c", NULL, "3h5h", "Ts2c", 88.64d, 11.36d, 0.0d, 11.36d, 88.64d, 0.0d);
+	eval_test(HOLDEM, 2, "KsAc2s", NULL, "3h5h", "Ts2c", 34.44d, 65.56d, 0.0d, 65.56d, 34.44d, 0.0d);
+	eval_test(HOLDEM, 2, NULL, NULL, "3h5h", "Ts2c", 46.06d, 51.92d, 2.02d, 51.92d, 46.06d, 2.02d);
 }
 
 int main()
