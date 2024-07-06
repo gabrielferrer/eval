@@ -248,6 +248,7 @@ void eval_tests()
 	eval_test(OMAHA, 2, "KsAc2s3c7d", NULL, "3h5h7sAd", "Ts2c8cKc", 1, 0, 0, 100.0d, 0.0d, 0.0d, 0, 1, 0, 0.0d, 100.0d, 0.0d);
 	eval_test(OMAHA, 2, "KsAc2s3c", NULL, "3h5h7sAd", "Ts2c8cKc", 28, 12, 0, 70.0d, 30.0d, 0.0d, 12, 28, 0, 30.0d, 70.0d, 0.0d);
 	eval_test(OMAHA, 2, "KsAc2s", NULL, "3h5h7sAd", "Ts2c8cKc", 433, 387, 0, 52.80d, 47.20d, 0.0d, 387, 433, 0, 47.20d, 52.80d, 0.0d);
+	eval_test(OMAHA, 2, NULL, NULL, "3h5h7sAd", "Ts2c8cKc", 261195, 238805, 0, 52.24d, 47.76d, 0.0d, 238805, 261195, 0, 47.76d, 52.24d, 0.0d);
 //#ifdef DEBUG
 //	log_fsm_combinations();
 //#endif
