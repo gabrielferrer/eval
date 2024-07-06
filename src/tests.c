@@ -236,7 +236,9 @@ void eval_tests()
 	//eval_test(HOLDEM, 2, "KsAc2s3c7d", NULL, "3h5h", "Ts2c", 100.0d, 0.0d, 0.0d, 0.0d, 100.0d, 0.0d);
 	//eval_test(HOLDEM, 2, "KsAc2s3c", NULL, "3h5h", "Ts2c", 88.64d, 11.36d, 0.0d, 11.36d, 88.64d, 0.0d);
 	//eval_test(HOLDEM, 2, "KsAc2s", NULL, "3h5h", "Ts2c", 34.44d, 65.56d, 0.0d, 65.56d, 34.44d, 0.0d);
-	eval_test(HOLDEM, 2, NULL, NULL, "3h5h", "Ts2c", 46.06d, 51.92d, 2.02d, 51.92d, 46.06d, 2.02d);
+	//eval_test(HOLDEM, 2, NULL, NULL, "3h5h", "Ts2c", 46.06d, 51.92d, 2.02d, 51.92d, 46.06d, 2.02d);
+	eval_test(OMAHA, 2, "KsAc2s3c7d", NULL, "3h5h7sAd", "Ts2c8cKc", 100.0d, 0.0d, 0.0d, 0.0d, 100.0d, 0.0d);
+	eval_test(OMAHA, 2, "KsAc2s3c", NULL, "3h5h7sAd", "Ts2c8cKc", 70.0d, 30.0d, 0.0d, 30.0d, 70.0d, 0.0d);
 }
 
 int main()
@@ -245,5 +247,4 @@ int main()
 	//comparation_tests();
 	//combination_tests();
 	eval_tests();
-	//compare_test("3h3c4c4d4h", "2d2c4c4d4h", 1);
 }

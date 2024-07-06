@@ -13,9 +13,10 @@
 typedef bool (*state_t)(board_t board);
 
 int CardIndex;
-int Indexes[2];
+int I0[2];
+int I1[2];
 card_t HoleCards[6];
-int CardsCount;
+int HoleCardsCount;
 board_t BoardCards;
 state_t* States;
 int StatesCount = 0;
@@ -44,19 +45,19 @@ bool holdem_0(board_t board)
 bool holdem_init_1a(board_t board)
 {
 	CardIndex = 0;
-	Indexes[0] = 0;
+	I0[0] = 0;
 	CurrentState++;
 	return false;
 }
 
 bool holdem_1(board_t board)
 {
-	board[Indexes[0]].rank = HoleCards[CardIndex].rank;
-	board[Indexes[0]].suit = HoleCards[CardIndex].suit;
+	board[I0[0]].rank = HoleCards[CardIndex].rank;
+	board[I0[0]].suit = HoleCards[CardIndex].suit;
 
 	for (int i = 0; i < BOARD_SIZE; i++)
 	{
-		if (i == Indexes[0])
+		if (i == I0[0])
 		{
 			continue;
 		}
@@ -65,9 +66,9 @@ bool holdem_1(board_t board)
 		board[i].suit = BoardCards[i].suit;
 	}
 
-	Indexes[0]++;
+	I0[0]++;
 
-	if (Indexes[0] == BOARD_SIZE)
+	if (I0[0] == BOARD_SIZE)
 	{
 		CurrentState++;
 	}
@@ -78,31 +79,30 @@ bool holdem_1(board_t board)
 bool init_holdem_1b(board_t board)
 {
 	CardIndex = 1;
-	Indexes[0] = 0;
+	I0[0] = 0;
 	CurrentState++;
 	return false;
 }
 
 bool init_holdem_2(board_t board)
 {
-	CardIndex = 2;
-	Indexes[0] = 0;
-	Indexes[1] = 1;
+	I0[0] = 0;
+	I0[1] = 1;
 	CurrentState++;
 	return false;
 }
 
 bool holdem_2(board_t board)
 {
-	for (int i = 0; i < CardsCount; i++)
+	for (int i = 0; i < 2; i++)
 	{
-		board[Indexes[i]].rank = HoleCards[i].rank;
-		board[Indexes[i]].suit = HoleCards[i].suit;
+		board[I0[i]].rank = HoleCards[i].rank;
+		board[I0[i]].suit = HoleCards[i].suit;
 	}
 
 	for (int i = 0; i < BOARD_SIZE; i++)
 	{
-		if (i == Indexes[0] || i == Indexes[1])
+		if (i == I0[0] || i == I0[1])
 		{
 			continue;
 		}
@@ -111,7 +111,7 @@ bool holdem_2(board_t board)
 		board[i].suit = BoardCards[i].suit;
 	}
 
-	if (next(Indexes, CardsCount, BOARD_SIZE))
+	if (next(I0, 2, BOARD_SIZE))
 	{
 		CurrentState++;
 	}
@@ -121,11 +121,46 @@ bool holdem_2(board_t board)
 
 bool omaha_init(board_t board)
 {
-	return true;
+	I0[0] = 0;
+	I0[1] = 1;
+	I1[0] = 0;
+	I1[1] = 1;
+	CurrentState++;
+	return false;
 }
 
 bool omaha(board_t board)
 {
+	for (int i = 0; i < 2; i++)
+	{
+		board[I1[i]].rank = HoleCards[I0[i]].rank;
+		board[I1[i]].suit = HoleCards[I0[i]].suit;
+	}
+
+	for (int i = 0; i < BOARD_SIZE; i++)
+	{
+		if (i == I0[0] || i == I0[1])
+		{
+			continue;
+		}
+
+		board[i].rank = BoardCards[i].rank;
+		board[i].suit = BoardCards[i].suit;
+	}
+
+	if (next(I0, 2, HoleCardsCount))
+	{
+		if (next(I1, 2, BOARD_SIZE))
+		{
+			CurrentState++;
+		}
+		else
+		{
+			I0[0] = 0;
+			I0[1] = 1;
+		}
+	}
+
 	return true;
 }
 
@@ -144,10 +179,10 @@ void FSM_reset_rules(rules_t rules)
 	CurrentState = 0;
 }
 
-void FSM_reset_hole_cards(card_t* hole_cards, int cards_count)
+void FSM_reset_hole_cards(card_t* hole_cards, int hole_cards_count)
 {
-	memcpy(HoleCards, hole_cards, cards_count * sizeof(card_t));
-	CardsCount = cards_count;
+	memcpy(HoleCards, hole_cards, hole_cards_count * sizeof(card_t));
+	HoleCardsCount = hole_cards_count;
 	CurrentState = 0;
 }
 
