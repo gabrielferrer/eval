@@ -2,10 +2,10 @@
 #include "debug.h"
 #include "misc.h"
 
-void D_write_boards(char* path, board_t best, board_t worst)
+void D_write_side_by_side_boards(char* path, board_t best, board_t worst)
 {
 	char card_buffer[3];
-	FILE* output = fopen (path, "a");
+	FILE* output = fopen(path, "a");
 
 	if (output == NULL)
 	{
@@ -31,10 +31,10 @@ void D_write_boards(char* path, board_t best, board_t worst)
 	fclose(output);
 }
 
-void D_write(char* path, board_t* boards, int count)
+void D_write_boards(char* path, board_t* boards, int count)
 {
 	char card_buffer[3];
-	FILE* output = fopen (path, "a");
+	FILE* output = fopen(path, "a");
 
 	if (output == NULL)
 	{

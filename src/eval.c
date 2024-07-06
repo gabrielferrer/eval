@@ -118,7 +118,7 @@ void eval_players(eval_t* eval_data, board_t* boards_page, int page_entries)
 			if (comparison > 0)
 			{
 //#ifdef DEBUG
-//				D_write_boards("C:\\Users\\Gabriel\\Desktop\\log.txt", temp_player_info[0].best_board, best_board);
+//				D_write_side_by_side_boards("C:\\Users\\Gabriel\\Desktop\\log.txt", temp_player_info[0].best_board, best_board);
 //#endif
 				continue;
 			}
@@ -126,14 +126,14 @@ void eval_players(eval_t* eval_data, board_t* boards_page, int page_entries)
 			if (comparison == 0)
 			{
 //#ifdef DEBUG
-//				D_write_boards("C:\\Users\\Gabriel\\Desktop\\ties.txt", temp_player_info[0].best_board, best_board);
+//				D_write_side_by_side_boards("C:\\Users\\Gabriel\\Desktop\\ties.txt", temp_player_info[0].best_board, best_board);
 //#endif
 				memcpy(temp_player_info[best_count].best_board, best_board, sizeof(board_t));
 				temp_player_info[best_count++].player_index = j;
 				continue;
 			}
 //#ifdef DEBUG
-//				D_write_boards("C:\\Users\\Gabriel\\Desktop\\log.txt", best_board, temp_player_info[0].best_board);
+//				D_write_side_by_side_boards("C:\\Users\\Gabriel\\Desktop\\log.txt", best_board, temp_player_info[0].best_board);
 //#endif
 			best_count = 0;
 			memcpy(temp_player_info[best_count].best_board, best_board, sizeof(board_t));
@@ -651,7 +651,7 @@ bool eval(eval_t* eval_data)
 			if (eval_data->board_cards_count == 0)
 			{
 //#ifdef DEBUG
-//				D_write("C:\\Users\\Gabriel\\Desktop\\boards.txt", (board_t*)info->combination_buffer, info->combination_count);
+//				D_write_boards("C:\\Users\\Gabriel\\Desktop\\boards.txt", (board_t*)info->combination_buffer, info->combination_count);
 //#endif
 				eval_players(eval_data, (board_t*)info->combination_buffer, info->combination_count);
 			}
@@ -679,7 +679,7 @@ bool eval(eval_t* eval_data)
 					page_entries++;
 				}
 //#ifdef DEBUG
-//				D_write("C:\\Users\\Gabriel\\Desktop\\boards.txt", boards_page, page_entries);
+//				D_write_boards("C:\\Users\\Gabriel\\Desktop\\boards.txt", boards_page, page_entries);
 //#endif
 				eval_players(eval_data, boards_page, page_entries);
 			}

@@ -139,7 +139,7 @@ bool omaha(board_t board)
 
 	for (int i = 0; i < BOARD_SIZE; i++)
 	{
-		if (i == I0[0] || i == I0[1])
+		if (i == I1[0] || i == I1[1])
 		{
 			continue;
 		}
@@ -148,16 +148,16 @@ bool omaha(board_t board)
 		board[i].suit = BoardCards[i].suit;
 	}
 
-	if (next(I0, 2, HoleCardsCount))
+	if (next(I1, 2, BOARD_SIZE))
 	{
-		if (next(I1, 2, BOARD_SIZE))
+		if (next(I0, 2, HoleCardsCount))
 		{
 			CurrentState++;
-		}
+		}		
 		else
 		{
-			I0[0] = 0;
-			I0[1] = 1;
+			I1[0] = 0;
+			I1[1] = 1;
 		}
 	}
 

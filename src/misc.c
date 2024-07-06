@@ -76,14 +76,14 @@ char* hand_rank_to_string(hand_rank_t hand_rank)
 	return NULL;
 }
 
-card_t* string_to_cards(char* board_string, card_t* cards)
+card_t* string_to_cards(char* cards_string, card_t* cards)
 {
-	if (board_string == NULL)
+	if (cards_string == NULL)
 	{
 		return NULL;
 	}
 
-	int length = strlen(board_string);
+	int length = strlen(cards_string);
 
 	if (length % 2 != 0)
 	{
@@ -95,14 +95,14 @@ card_t* string_to_cards(char* board_string, card_t* cards)
 
 	for (int i = 0, j = 0; i < length; j++)
 	{
-		r = to_rank(board_string[i++]);
+		r = to_rank(cards_string[i++]);
 
 		if (r == NO_RANK)
 		{
 			return NULL;
 		}
 
-		s = to_suit(board_string[i++]);
+		s = to_suit(cards_string[i++]);
 
 		if (s == NO_SUIT)
 		{

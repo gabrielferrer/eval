@@ -8,9 +8,21 @@
 #include "misc.h"
 #include "fsm.h"
 
+#ifdef DEBUG
+#include "debug.h"
+#endif
+
 #define BUFFER_SIZE 10000
 
-typedef struct { double e_win; double e_lose; double e_tie; } eq_t;
+typedef struct
+{
+	int wins;
+	int loses;
+	int ties;
+	double e_win;
+	double e_lose;
+	double e_tie;
+} eq_t;
 
 hand_rank_result_t r;
 
@@ -88,6 +100,9 @@ void eval_test(rules_t rules, int players, char* board_cards, char* dead_cards, 
 
 	for (int i = 0; i < players; i++)
 	{
+		equities[i].wins = va_arg(valist, int);
+		equities[i].loses = va_arg(valist, int);
+		equities[i].ties = va_arg(valist, int);
 		equities[i].e_win = va_arg(valist, double);
 		equities[i].e_lose = va_arg(valist, double);
 		equities[i].e_tie = va_arg(valist, double);
@@ -122,40 +137,15 @@ void eval_test(rules_t rules, int players, char* board_cards, char* dead_cards, 
 		return;
 	}
 
-	printf("Board: ");
-
-	for (int i = 0; i < eval_data.board_cards_count; i++)
-	{
-		card_to_string(&eval_data.board_cards[i], card_buffer);
-		printf("%s", card_buffer);
-
-		if (i + 1 < eval_data.board_cards_count)
-		{
-			printf(" ");
-		}
-	}
-
-	printf("\n");
-
 	for (int i = 0; i < players; i++)
 	{
 		int loses = eval_data.total_boards - eval_data.equities[i].wins - eval_data.equities[i].ties;
-		printf("Data for player %i [", i);
 
-		for (int j = 0; j < eval_data.hole_cards_count; j++)
-		{
-			card_to_string(&eval_data.hole_cards[i][j], card_buffer);
-			printf("%s", card_buffer);
-			printf(j + 1 < eval_data.hole_cards_count ? " " : "]");
-		}
-
-		printf("\n");
-		printf("\tWins: %i, loses: %i, ties: %i\n", eval_data.equities[i].wins, loses, eval_data.equities[i].ties);
-		printf("\tEquity (expected, actual):\n");
-		printf("\twin:  (%f, %f)\n", equities[i].e_win, eval_data.equities[i].win_probability * 100.0d);
-		printf("\tlose: (%f, %f)\n", equities[i].e_lose, eval_data.equities[i].lose_probability * 100.0d);
-		printf("\ttie:  (%f, %f)\n", equities[i].e_tie, eval_data.equities[i].tie_probability * 100.0d);
-		printf("\n");
+		printf("[Expected W/L/T - Eq W/L/T] [Actual W/L/T - Eq W/L/T]: [%i/%i/%i - %2.2f/%2.2f/%2.2f] [%i/%i/%i - %2.2f/%2.2f/%2.2f]\n", \
+			equities[i].wins, equities[i].loses, equities[i].ties, equities[i].e_win, equities[i].e_lose, equities[i].e_tie, \
+			eval_data.equities[i].wins, loses, eval_data.equities[i].ties, \
+			eval_data.equities[i].win_probability * 100.0d, eval_data.equities[i].lose_probability * 100.0d, \
+			eval_data.equities[i].tie_probability * 100.0d);
 	}
 }
 
@@ -231,14 +221,36 @@ void comparation_tests()
 	compare_test("KhJhQhThAh", "JcQcTcAcKc", 0);
 }
 
+// void log_fsm_combinations()
+// {
+	// board_t board;
+	// card_t hole_cards[4];
+
+	// string_to_cards("3h5h7sAd", hole_cards);
+	// string_to_cards("KsAc2s3c7d", board);
+
+	// FSM_reset_rules(OMAHA);
+	// FSM_reset_hole_cards(hole_cards, 4);
+	// FSM_reset_board_cards(board);
+
+	// while (FSM_next(board))
+	// {
+		// D_write_boards("C:\\Users\\Gabriel\\Desktop\\boards.txt", &board, 1);
+	// }
+// }
+
 void eval_tests()
 {
-	//eval_test(HOLDEM, 2, "KsAc2s3c7d", NULL, "3h5h", "Ts2c", 100.0d, 0.0d, 0.0d, 0.0d, 100.0d, 0.0d);
-	//eval_test(HOLDEM, 2, "KsAc2s3c", NULL, "3h5h", "Ts2c", 88.64d, 11.36d, 0.0d, 11.36d, 88.64d, 0.0d);
-	//eval_test(HOLDEM, 2, "KsAc2s", NULL, "3h5h", "Ts2c", 34.44d, 65.56d, 0.0d, 65.56d, 34.44d, 0.0d);
-	//eval_test(HOLDEM, 2, NULL, NULL, "3h5h", "Ts2c", 46.06d, 51.92d, 2.02d, 51.92d, 46.06d, 2.02d);
-	eval_test(OMAHA, 2, "KsAc2s3c7d", NULL, "3h5h7sAd", "Ts2c8cKc", 100.0d, 0.0d, 0.0d, 0.0d, 100.0d, 0.0d);
-	eval_test(OMAHA, 2, "KsAc2s3c", NULL, "3h5h7sAd", "Ts2c8cKc", 70.0d, 30.0d, 0.0d, 30.0d, 70.0d, 0.0d);
+	eval_test(HOLDEM, 2, "KsAc2s3c7d", NULL, "3h5h", "Ts2c", 1, 0, 0, 100.0d, 0.0d, 0.0d, 0, 1, 0, 0.0d, 100.0d, 0.0d);
+	eval_test(HOLDEM, 2, "KsAc2s3c", NULL, "3h5h", "Ts2c", 39, 5, 0, 88.64d, 11.36d, 0.0d, 5, 39, 0, 11.36d, 88.64d, 0.0d);
+	eval_test(HOLDEM, 2, "KsAc2s", NULL, "3h5h", "Ts2c", 341, 649, 0, 34.44d, 65.56d, 0.0d, 649, 341, 0, 65.56d, 34.44d, 0.0d);
+	eval_test(HOLDEM, 2, NULL, NULL, "3h5h", "Ts2c", 788648, 889063, 34593, 46.06d, 51.92d, 2.02d, 889063, 788648, 34593, 51.92d, 46.06d, 2.02d);
+	eval_test(OMAHA, 2, "KsAc2s3c7d", NULL, "3h5h7sAd", "Ts2c8cKc", 1, 0, 0, 100.0d, 0.0d, 0.0d, 0, 1, 0, 0.0d, 100.0d, 0.0d);
+	eval_test(OMAHA, 2, "KsAc2s3c", NULL, "3h5h7sAd", "Ts2c8cKc", 28, 12, 0, 70.0d, 30.0d, 0.0d, 12, 28, 0, 30.0d, 70.0d, 0.0d);
+	eval_test(OMAHA, 2, "KsAc2s", NULL, "3h5h7sAd", "Ts2c8cKc", 433, 387, 0, 52.80d, 47.20d, 0.0d, 387, 433, 0, 47.20d, 52.80d, 0.0d);
+//#ifdef DEBUG
+//	log_fsm_combinations();
+//#endif
 }
 
 int main()
