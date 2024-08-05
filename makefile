@@ -4,21 +4,28 @@ SRCDIR=src
 BINDIR=bin
 OBJDIR=obj
 DEPENDENCIES=
-OBJDIRS="$(OBJDIR)\tests.o" "$(OBJDIR)\eval.o" "$(OBJDIR)\enum.o" "$(OBJDIR)\misc.o" "$(OBJDIR)\fsm.o" "$(OBJDIR)\cmbntn.o"
-OBJS=tests.o eval.o enum.o misc.o fsm.o cmbntn.o
+TESTSOBJDIRS="$(OBJDIR)\tests.o" "$(OBJDIR)\eval.o" "$(OBJDIR)\enum.o" "$(OBJDIR)\misc.o" "$(OBJDIR)\fsm.o" "$(OBJDIR)\cmbntn.o"
+COMBSOBJDIRS="$(OBJDIR)\combs.o"
+TESTSOBJS=tests.o eval.o enum.o misc.o fsm.o cmbntn.o
+COMBSOBJS=combs.o
+BINS=tests combs
 CFLAGS=$(INCLUDE)
 
 ifdef DEBUG
 CFLAGS+=-g -DDEBUG
-OBJDIRS+="$(OBJDIR)\debug.o"
-OBJS+=debug.o
+TESTSOBJDIRS+="$(OBJDIR)\debug.o"
+COMBSOBJDIRS+="$(OBJDIR)\debug.o" "$(OBJDIR)\misc.o"
+TESTSOBJS+=debug.o
+COMBSOBJS+=debug.o misc.o
 endif
 
-tests: $(OBJS)
-	$(CC) $(LDFLAGS) $(OBJDIRS) -o "$(BINDIR)\tests.exe"
+all: $(BINS)
 
 tests.o:
 	$(CC) $(CFLAGS) -c "$(SRCDIR)\tests.c" -o "$(OBJDIR)\tests.o"
+
+combs.o:
+	$(CC) $(CFLAGS) -c "$(SRCDIR)\combs.c" -o "$(OBJDIR)\combs.o"
 
 eval.o:
 	$(CC) $(CFLAGS) -c "$(SRCDIR)\eval.c" -o "$(OBJDIR)\eval.o"
@@ -38,5 +45,11 @@ cmbntn.o:
 debug.o:
 	$(CC) $(CFLAGS) -c "$(SRCDIR)\debug.c" -o "$(OBJDIR)\debug.o"
 
+tests: $(TESTSOBJS)
+	$(CC) $(LDFLAGS) $(TESTSOBJDIRS) -o "$(BINDIR)\tests.exe"
+
+combs: $(COMBSOBJS)
+	$(CC) $(LDFLAGS) $(COMBSOBJDIRS) -o "$(BINDIR)\combs.exe"
+
 clean:
-	del /F /Q "$(OBJDIR)\*.*" "$(BINDIR)\tests.exe"
+	del /F /Q "$(OBJDIR)\*.*" "$(BINDIR)\*.*"

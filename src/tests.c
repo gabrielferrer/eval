@@ -221,7 +221,7 @@ void comparation_tests()
 	compare_test("KhJhQhThAh", "JcQcTcAcKc", 0);
 }
 
-// void log_fsm_combinations()
+// void fsm_combinations_log()
 // {
 	// board_t board;
 	// card_t hole_cards[4];
@@ -239,19 +239,52 @@ void comparation_tests()
 	// }
 // }
 
+#ifdef DEBUG
+void combination_indexes_log()
+{
+	card_t deck[52];
+
+	for (rank_t r = TWO; r <= ACE; r++)
+	{
+		for (suit_t s = CLUBS; s <= SPADES; s++)
+		{
+			int i = INDEX(r, s);
+			deck[i].rank = r;
+			deck[i].suit = s;
+		}
+	}
+
+	combination_info_t* info = initialize(deck, 52, 5, BUFFER_SIZE);
+	bool more = false;
+
+	info->indexes[0] = 52 - 29;
+	info->indexes[1] = 52 - 25;
+	info->indexes[2] = 52 - 19;
+	info->indexes[3] = 52 - 11;
+	info->indexes[4] = 52 - 10;
+
+	do
+	{
+		more = combinations(info);
+		D_write_boards("C:\\Users\\Gabriel\\Desktop\\combinations.txt", (board_t*)info->combination_buffer, info->combination_count);
+	} while (more);
+}
+#endif
+
 void eval_tests()
 {
-	eval_test(HOLDEM, 2, "KsAc2s3c7d", NULL, "3h5h", "Ts2c", 1, 0, 0, 100.0d, 0.0d, 0.0d, 0, 1, 0, 0.0d, 100.0d, 0.0d);
-	eval_test(HOLDEM, 2, "KsAc2s3c", NULL, "3h5h", "Ts2c", 39, 5, 0, 88.64d, 11.36d, 0.0d, 5, 39, 0, 11.36d, 88.64d, 0.0d);
-	eval_test(HOLDEM, 2, "KsAc2s", NULL, "3h5h", "Ts2c", 341, 649, 0, 34.44d, 65.56d, 0.0d, 649, 341, 0, 65.56d, 34.44d, 0.0d);
-	eval_test(HOLDEM, 2, NULL, NULL, "3h5h", "Ts2c", 788648, 889063, 34593, 46.06d, 51.92d, 2.02d, 889063, 788648, 34593, 51.92d, 46.06d, 2.02d);
-	eval_test(OMAHA, 2, "KsAc2s3c7d", NULL, "3h5h7sAd", "Ts2c8cKc", 1, 0, 0, 100.0d, 0.0d, 0.0d, 0, 1, 0, 0.0d, 100.0d, 0.0d);
-	eval_test(OMAHA, 2, "KsAc2s3c", NULL, "3h5h7sAd", "Ts2c8cKc", 28, 12, 0, 70.0d, 30.0d, 0.0d, 12, 28, 0, 30.0d, 70.0d, 0.0d);
-	eval_test(OMAHA, 2, "KsAc2s", NULL, "3h5h7sAd", "Ts2c8cKc", 433, 387, 0, 52.80d, 47.20d, 0.0d, 387, 433, 0, 47.20d, 52.80d, 0.0d);
-	eval_test(OMAHA, 2, NULL, NULL, "3h5h7sAd", "Ts2c8cKc", 261195, 238805, 0, 52.24d, 47.76d, 0.0d, 238805, 261195, 0, 47.76d, 52.24d, 0.0d);
-//#ifdef DEBUG
-//	log_fsm_combinations();
-//#endif
+	// eval_test(HOLDEM, 2, "KsAc2s3c7d", NULL, "3h5h", "Ts2c", 1, 0, 0, 100.0d, 0.0d, 0.0d, 0, 1, 0, 0.0d, 100.0d, 0.0d);
+	// eval_test(HOLDEM, 2, "KsAc2s3c", NULL, "3h5h", "Ts2c", 39, 5, 0, 88.64d, 11.36d, 0.0d, 5, 39, 0, 11.36d, 88.64d, 0.0d);
+	// eval_test(HOLDEM, 2, "KsAc2s", NULL, "3h5h", "Ts2c", 341, 649, 0, 34.44d, 65.56d, 0.0d, 649, 341, 0, 65.56d, 34.44d, 0.0d);
+	// eval_test(HOLDEM, 2, NULL, NULL, "3h5h", "Ts2c", 788648, 889063, 34593, 46.06d, 51.92d, 2.02d, 889063, 788648, 34593, 51.92d, 46.06d, 2.02d);
+	// eval_test(OMAHA, 2, "KsAc2s3c7d", NULL, "3h5h7sAd", "Ts2c8cKc", 1, 0, 0, 100.0d, 0.0d, 0.0d, 0, 1, 0, 0.0d, 100.0d, 0.0d);
+	// eval_test(OMAHA, 2, "KsAc2s3c", NULL, "3h5h7sAd", "Ts2c8cKc", 28, 12, 0, 70.0d, 30.0d, 0.0d, 12, 28, 0, 30.0d, 70.0d, 0.0d);
+	// eval_test(OMAHA, 2, "KsAc2s", NULL, "3h5h7sAd", "Ts2c8cKc", 433, 387, 0, 52.80d, 47.20d, 0.0d, 387, 433, 0, 47.20d, 52.80d, 0.0d);
+	// eval_test(OMAHA, 2, NULL, NULL, "3h5h7sAd", "Ts2c8cKc", 261195, 238805, 0, 52.24d, 47.76d, 0.0d, 238805, 261195, 0, 47.76d, 52.24d, 0.0d);
+#ifdef DEBUG
+//	fsm_combinations_log();
+	combination_indexes_log();
+#endif
 }
 
 int main()
