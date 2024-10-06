@@ -1,6 +1,6 @@
 #include "cmbntn.h"
 
-bool next_internal(int x[], int k, int c, int i)
+bool NextInternal (int x[], int k, int c, int i)
 {
 	if (i < 0)
 	{
@@ -22,10 +22,10 @@ bool next_internal(int x[], int k, int c, int i)
 		return false;
 	}
 
-	return next_internal(x, k, x[i], i-1);
+	return NextInternal (x, k, x[i], i-1);
 }
 
-bool next(int x[], int k, int c)
+bool Next (int x[], int k, int c)
 {
-	return next_internal(x, k, c, k - 1);
+	return NextInternal (x, k, c, k - 1);
 }

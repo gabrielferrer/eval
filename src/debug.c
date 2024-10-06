@@ -2,10 +2,10 @@
 #include "debug.h"
 #include "misc.h"
 
-void D_write_side_by_side_boards(char* path, board_t best, board_t worst)
+void D_WriteSideBySideBoards (char* path, board_t best, board_t worst)
 {
-	char card_buffer[3];
-	FILE* output = fopen(path, "a");
+	char cardBuffer[3];
+	FILE* output = fopen (path, "a");
 
 	if (output == NULL)
 	{
@@ -14,27 +14,27 @@ void D_write_side_by_side_boards(char* path, board_t best, board_t worst)
 
 	for (int i = 0; i < BOARD_SIZE; i++)
 	{
-		card_to_string(&best[i], card_buffer);
-		fwrite(card_buffer, 1, 2, output);
+		cardToString (&best[i], cardBuffer);
+		fwrite (cardBuffer, 1, 2, output);
 	}
 
-	fwrite(" ", 1, 1, output);
+	fwrite (" ", 1, 1, output);
 
 	for (int i = 0; i < BOARD_SIZE; i++)
 	{
-		card_to_string(&worst[i], card_buffer);
-		fwrite(card_buffer, 1, 2, output);
+		CardToString (&worst[i], cardBuffer);
+		fwrite (cardBuffer, 1, 2, output);
 	}
 
-	fwrite("\n", 1, 1, output);
+	fwrite ("\n", 1, 1, output);
 
-	fclose(output);
+	fclose (output);
 }
 
-void D_write_boards(char* path, board_t* boards, int count)
+void D_WriteBoards (char* path, board_t* boards, int count)
 {
-	char card_buffer[3];
-	FILE* output = fopen(path, "a");
+	char cardBuffer[3];
+	FILE* output = fopen (path, "a");
 
 	if (output == NULL)
 	{
@@ -45,12 +45,12 @@ void D_write_boards(char* path, board_t* boards, int count)
 	{
 		for (int j = 0; j < BOARD_SIZE; j++)
 		{
-			card_to_string(&boards[i][j], card_buffer);
-			fwrite(card_buffer, 1, 2, output);
+			CardToString (&boards[i][j], cardBuffer);
+			fwrite (cardBuffer, 1, 2, output);
 		}
 
-		fwrite("\n", 1, 1, output);
+		fwrite ("\n", 1, 1, output);
 	}
 
-	fclose(output);
+	fclose (output);
 }

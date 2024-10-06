@@ -1,7 +1,10 @@
 #ifndef POKER_H
 #define POKER_H
 
+#define DECK_SIZE 52
 #define BOARD_SIZE 5
+#define MAX_PLAYERS 10
+#define MAX_CARDS 6
 
 typedef enum { HOLDEM, OMAHA, OMAHA5, OMAHA6 } rules_t;
 

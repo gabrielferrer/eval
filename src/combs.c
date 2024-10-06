@@ -20,7 +20,7 @@ range_t ranges[INDEXES] = {	{ 0, 47 }, { 1, 48 }, { 2, 49 }, { 3, 50 }, { 4, 51 
 
 long int result[INDEXES][SET_SIZE];
 
-long int product (long int from, long int to)
+long int Product (long int from, long int to)
 {
 	long int r = 1;
 
@@ -32,7 +32,7 @@ long int product (long int from, long int to)
 	return r;
 }
 
-long int combination(long int n, long int k)
+long int Combination (long int n, long int k)
 {
 	if (n < k)
 	{
@@ -44,7 +44,7 @@ long int combination(long int n, long int k)
 		return 1;
 	}
 
-	return k > n - k ? product (k + 1, n) / product (1, n - k) : product (n - k + 1, n) / product (1, k);
+	return k > n - k ? Product (k + 1, n) / Product (1, n - k) : Product (n - k + 1, n) / Product (1, k);
 }
 
 int main (int argc, char* argv[])
@@ -72,7 +72,7 @@ int main (int argc, char* argv[])
 	{
 		for (int j = ranges[i].min; j <= ranges[i].max; j++)
 		{
-			result[i][j] = combination (j, i + 1);
+			result[i][j] = Combination (j, i + 1);
 		}
 	}
 
@@ -91,7 +91,7 @@ int main (int argc, char* argv[])
 		{
 			memset (values[i][j], 0, BUFFER_SIZE);
 			sprintf (values[i][j], "%ld", result[i][j]);
-			lengths[i] = strlen(values[i][j]);
+			lengths[i] = strlen (values[i][j]);
 		}
 
 		for (int i = 0; i < INDEXES; i++)
@@ -107,7 +107,7 @@ int main (int argc, char* argv[])
 	{
 		for (int j = 0; j < SET_SIZE; j++)
 		{
-			int length = strlen(values[i][j]);
+			int length = strlen (values[i][j]);
 
 			for (int k = 0; k < maxlenghts[j] - length; k++)
 			{

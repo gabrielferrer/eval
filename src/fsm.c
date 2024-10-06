@@ -1,4 +1,5 @@
 #include <string.h>
+#include "poker.h"
 #include "cmbntn.h"
 #include "fsm.h"
 
@@ -10,39 +11,39 @@
 		True if this state returns a valid board, false if next state must be
 		called before returning a valid board.
 */
-typedef bool (*state_t)(board_t board);
+typedef bool (*state_t) (board_t board);
 
 int CardIndex;
 int I0[2];
 int I1[2];
-card_t HoleCards[6];
+card_t HoleCards[MAX_CARDS];
 int HoleCardsCount;
 board_t BoardCards;
 state_t* States;
 int StatesCount = 0;
 int CurrentState = 0;
-bool holdem_0(board_t board);
-bool holdem_init_1a(board_t board);
-bool holdem_1(board_t board);
-bool init_holdem_1b(board_t board);
-bool init_holdem_2(board_t board);
-bool holdem_2(board_t board);
+bool Holdem0 (board_t board);
+bool HoldemInit1a (board_t board);
+bool Holdem1 (board_t board);
+bool InitHoldem1b (board_t board);
+bool InitHoldem2 (board_t board);
+bool Holdem2 (board_t board);
 
-bool omaha_init(board_t board);
-bool omaha(board_t board);
+bool OmahaInit (board_t board);
+bool Omaha (board_t board);
 
-state_t HoldemStates[] = { holdem_0, holdem_init_1a, holdem_1, init_holdem_1b, holdem_1, init_holdem_2, holdem_2 };
+state_t HoldemStates[] = { Holdem0, HoldemInit1a, Holdem1, InitHoldem1b, Holdem1, InitHoldem2, Holdem2 };
 
-state_t OmahaStates[] = { omaha_init, omaha };
+state_t OmahaStates[] = { OmahaInit, Omaha };
 
-bool holdem_0(board_t board)
+bool Holdem0 (board_t board)
 {
-	memcpy(board, BoardCards, sizeof(board_t));
+	memcpy (board, BoardCards, sizeof (board_t));
 	CurrentState++;
 	return true;
 }
 
-bool holdem_init_1a(board_t board)
+bool HoldemInit1a (board_t board)
 {
 	CardIndex = 0;
 	I0[0] = 0;
@@ -50,7 +51,7 @@ bool holdem_init_1a(board_t board)
 	return false;
 }
 
-bool holdem_1(board_t board)
+bool Holdem1 (board_t board)
 {
 	board[I0[0]].rank = HoleCards[CardIndex].rank;
 	board[I0[0]].suit = HoleCards[CardIndex].suit;
@@ -76,7 +77,7 @@ bool holdem_1(board_t board)
 	return true;
 }
 
-bool init_holdem_1b(board_t board)
+bool InitHoldem1b (board_t board)
 {
 	CardIndex = 1;
 	I0[0] = 0;
@@ -84,7 +85,7 @@ bool init_holdem_1b(board_t board)
 	return false;
 }
 
-bool init_holdem_2(board_t board)
+bool InitHoldem2 (board_t board)
 {
 	I0[0] = 0;
 	I0[1] = 1;
@@ -92,7 +93,7 @@ bool init_holdem_2(board_t board)
 	return false;
 }
 
-bool holdem_2(board_t board)
+bool Holdem2 (board_t board)
 {
 	for (int i = 0; i < 2; i++)
 	{
@@ -111,7 +112,7 @@ bool holdem_2(board_t board)
 		board[i].suit = BoardCards[i].suit;
 	}
 
-	if (next(I0, 2, BOARD_SIZE))
+	if (Next (I0, 2, BOARD_SIZE))
 	{
 		CurrentState++;
 	}
@@ -119,7 +120,7 @@ bool holdem_2(board_t board)
 	return true;
 }
 
-bool omaha_init(board_t board)
+bool OmahaInit (board_t board)
 {
 	I0[0] = 0;
 	I0[1] = 1;
@@ -129,7 +130,7 @@ bool omaha_init(board_t board)
 	return false;
 }
 
-bool omaha(board_t board)
+bool Omaha (board_t board)
 {
 	for (int i = 0; i < 2; i++)
 	{
@@ -148,9 +149,9 @@ bool omaha(board_t board)
 		board[i].suit = BoardCards[i].suit;
 	}
 
-	if (next(I1, 2, BOARD_SIZE))
+	if (Next (I1, 2, BOARD_SIZE))
 	{
-		if (next(I0, 2, HoleCardsCount))
+		if (Next (I0, 2, HoleCardsCount))
 		{
 			CurrentState++;
 		}		
@@ -164,35 +165,35 @@ bool omaha(board_t board)
 	return true;
 }
 
-void FSM_reset_rules(rules_t rules)
+void FSM_ResetRules (rules_t rules)
 {
 	if (rules == HOLDEM)
 	{
 		States = HoldemStates;
-		StatesCount = sizeof(HoldemStates) / sizeof(state_t);
+		StatesCount = sizeof (HoldemStates) / sizeof (state_t);
 	} else
 	{
 		States = OmahaStates;
-		StatesCount = sizeof(OmahaStates) / sizeof(state_t);
+		StatesCount = sizeof (OmahaStates) / sizeof (state_t);
 	}
 
 	CurrentState = 0;
 }
 
-void FSM_reset_hole_cards(card_t* hole_cards, int hole_cards_count)
+void FSM_ResetHoleCards (card_t* holeCards, int nHoleCards)
 {
-	memcpy(HoleCards, hole_cards, hole_cards_count * sizeof(card_t));
-	HoleCardsCount = hole_cards_count;
+	memcpy (HoleCards, holeCards, nHoleCards * sizeof (card_t));
+	HoleCardsCount = nHoleCards;
 	CurrentState = 0;
 }
 
-void FSM_reset_board_cards(board_t board_cards)
+void FSM_ResetBoardCards (board_t boardCards)
 {
-	memcpy(BoardCards, board_cards, sizeof(board_t));
+	memcpy (BoardCards, boardCards, sizeof (board_t));
 	CurrentState = 0;
 }
 
-bool FSM_next(board_t board)
+bool FSM_Next (board_t board)
 {
 	if (CurrentState < 0 || CurrentState >= StatesCount)
 	{
@@ -203,7 +204,7 @@ bool FSM_next(board_t board)
 
 	do
 	{
-		done = States[CurrentState](board);
+		done = States[CurrentState] (board);
 	}
 	while (!done && CurrentState < StatesCount);
 

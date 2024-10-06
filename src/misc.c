@@ -2,7 +2,7 @@
 #include <string.h>
 #include "misc.h"
 
-rank_t to_rank(char r)
+rank_t ToRank (char r)
 {
 	if (r == '2') return TWO;
 	if (r == '3') return THREE;
@@ -21,7 +21,7 @@ rank_t to_rank(char r)
 	return NO_RANK;
 }
 
-suit_t to_suit(char s)
+suit_t ToSuit (char s)
 {
 	if (s == 'c') return CLUBS;
 	if (s == 'd') return DIAMONDS;
@@ -31,7 +31,7 @@ suit_t to_suit(char s)
 	return NO_SUIT;
 }
 
-char to_rank_string(rank_t r)
+char ToRankString (rank_t r)
 {
 	if (r == TWO) return '2';
 	if (r == THREE) return '3';
@@ -50,7 +50,7 @@ char to_rank_string(rank_t r)
 	return '\0';
 }
 
-char to_suit_string(suit_t s)
+char ToSuitString (suit_t s)
 {
 	if (s == CLUBS) return 'c';
 	if (s == DIAMONDS) return 'd';
@@ -60,30 +60,30 @@ char to_suit_string(suit_t s)
 	return '\0';	
 }
 
-char* hand_rank_to_string(hand_rank_t hand_rank)
+char* HandRankToString (hand_rank_t handRank)
 {
-	if (hand_rank == HIGH_CARD) return "High Card";
-	if (hand_rank == PAIR) return "Pair";
-	if (hand_rank == TWO_PAIR) return "Two Pair";
-	if (hand_rank == THREE_OF_A_KIND) return "Three of a Kind";
-	if (hand_rank == STRAIGHT) return "Straight";
-	if (hand_rank == FLUSH) return "Flush";
-	if (hand_rank == FULL_HOUSE) return "Full House";
-	if (hand_rank == FOUR_OF_A_KIND) return "For of a Kind";
-	if (hand_rank == STRAIGHT_FLUSH) return "Straight Flush";
-	if (hand_rank == ROYAL_FLUSH) return "Royal Flush";
+	if (handRank == HIGH_CARD) return "High Card";
+	if (handRank == PAIR) return "Pair";
+	if (handRank == TWO_PAIR) return "Two Pair";
+	if (handRank == THREE_OF_A_KIND) return "Three of a Kind";
+	if (handRank == STRAIGHT) return "Straight";
+	if (handRank == FLUSH) return "Flush";
+	if (handRank == FULL_HOUSE) return "Full House";
+	if (handRank == FOUR_OF_A_KIND) return "For of a Kind";
+	if (handRank == STRAIGHT_FLUSH) return "Straight Flush";
+	if (handRank == ROYAL_FLUSH) return "Royal Flush";
 
 	return NULL;
 }
 
-card_t* string_to_cards(char* cards_string, card_t* cards)
+card_t* StringToCards (char* cardsString, card_t* cards)
 {
-	if (cards_string == NULL)
+	if (cardsString == NULL)
 	{
 		return NULL;
 	}
 
-	int length = strlen(cards_string);
+	int length = strlen (cardsString);
 
 	if (length % 2 != 0)
 	{
@@ -95,14 +95,14 @@ card_t* string_to_cards(char* cards_string, card_t* cards)
 
 	for (int i = 0, j = 0; i < length; j++)
 	{
-		r = to_rank(cards_string[i++]);
+		r = ToRank (cardsString[i++]);
 
 		if (r == NO_RANK)
 		{
 			return NULL;
 		}
 
-		s = to_suit(cards_string[i++]);
+		s = ToSuit (cardsString[i++]);
 
 		if (s == NO_SUIT)
 		{
@@ -116,10 +116,10 @@ card_t* string_to_cards(char* cards_string, card_t* cards)
 	return cards;
 }
 
-char* card_to_string(card_t* card, char* destination)
+char* CardToString (card_t* card, char* destination)
 {
-	destination[0] = to_rank_string(card->rank);
-	destination[1] = to_suit_string(card->suit);
+	destination[0] = ToRankString (card->rank);
+	destination[1] = ToSuitString (card->suit);
 	destination[2] = '\0';
 
 	return destination;

@@ -3,8 +3,8 @@
 
 #include "poker.h"
 
-void D_write_side_by_side_boards(char* path, board_t best, board_t worst);
+void D_WriteSideBySideBoards (char* path, board_t best, board_t worst);
 
-void D_write_boards(char* path, board_t* boards, int count);
+void D_WriteBoards (char* path, board_t* boards, int count);
 
 #endif

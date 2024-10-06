@@ -3,6 +3,6 @@
 
 #include <stdbool.h>
 
-bool next(int x[], int k, int c);
+bool Next (int x[], int k, int c);
 
 #endif

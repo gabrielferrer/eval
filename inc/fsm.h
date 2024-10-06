@@ -4,12 +4,12 @@
 #include <stdbool.h>
 #include "poker.h"
 
-void FSM_reset_rules(rules_t rules);
+void FSM_ResetRules (rules_t rules);
 
-void FSM_reset_hole_cards(card_t* hole_cards, int cards_count);
+void FSM_ResetHoleCards (card_t* holeCards, int nCards);
 
-void FSM_reset_board_cards(board_t board_cards);
+void FSM_ResetBoardCards (board_t boardCards);
 
-bool FSM_next(board_t board);
+bool FSM_Next (board_t board);
 
 #endif

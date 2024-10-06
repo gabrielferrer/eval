@@ -4,14 +4,14 @@
 #include "cmbntn.h"
 #include "enum.h"
 
-combination_info_t* initialize(card_t* set, int set_size, int combination_size, int buffer_size)
+combination_info_t* E_Initialize (card_t* set, int setSize, int combinationSize, int bufferSize)
 {
-	if (set == NULL || combination_size < 0 || combination_size > set_size || buffer_size < 1)
+	if (set == NULL || combinationSize < 0 || combinationSize > setSize || bufferSize < 1)
 	{
 		return NULL;
 	}
 
-	combination_info_t* info = (combination_info_t*)malloc(sizeof(combination_info_t));
+	combination_info_t* info = (combination_info_t*) malloc (sizeof (combination_info_t));
 
 	if (info == NULL)
 	{
@@ -19,16 +19,16 @@ combination_info_t* initialize(card_t* set, int set_size, int combination_size, 
 	}
 
 	info->set = set;
-	info->set_size = set_size;
-	info->combination_size = combination_size;
-	info->combination_bytes = (combination_size == 0 ? set_size : combination_size) * sizeof(card_t);
-	info->indexes = combination_size == 0 ? NULL : (int*)malloc(combination_size * sizeof(int));
-	info->combination_buffer = (card_t*)malloc((combination_size == 0 ? set_size : combination_size * buffer_size) * sizeof(card_t));
-	info->buffer_size = combination_size == 0 ? 1 : buffer_size;
-	info->current_combination = combination_size == 0 ? NULL : (card_t*)malloc(combination_size * sizeof(card_t));
+	info->setSize = setSize;
+	info->combinationSize = combinationSize;
+	info->combinationBytes = (combinationSize == 0 ? setSize : combinationSize) * sizeof (card_t);
+	info->indexes = combinationSize == 0 ? NULL : (int*) malloc(combinationSize * sizeof (int));
+	info->combinationBuffer = (card_t*) malloc ((combinationSize == 0 ? setSize : combinationSize * bufferSize) * sizeof (card_t));
+	info->bufferSize = combinationSize == 0 ? 1 : bufferSize;
+	info->currentCombination = combinationSize == 0 ? NULL : (card_t*) malloc(combinationSize * sizeof (card_t));
 
 	// Initialize indexes to point to first elements.
-	for (int i = 0; i < combination_size; i++)
+	for (int i = 0; i < combinationSize; i++)
 	{
 		info->indexes[i] = i;
 	}
@@ -36,62 +36,62 @@ combination_info_t* initialize(card_t* set, int set_size, int combination_size, 
 	return info;
 }
 
-void dispose(combination_info_t* info)
+void E_Dispose (combination_info_t* info)
 {
 	if (info == NULL)
 	{
 		return;
 	}
 
-	if (info->current_combination != NULL)
+	if (info->currentCombination != NULL)
 	{
-		free(info->current_combination);
+		free (info->currentCombination);
 	}
 
-	if (info->combination_buffer != NULL)
+	if (info->combinationBuffer != NULL)
 	{
-		free(info->combination_buffer);
+		free (info->combinationBuffer);
 	}
 
 	if (info->indexes != NULL)
 	{
-		free(info->indexes);
+		free (info->indexes);
 	}
 
-	free(info);
+	free (info);
 }
 
-bool combinations(combination_info_t* info)
+bool E_Combinations (combination_info_t* info)
 {
 	bool done;
-	card_t* buffer_offset = info->combination_buffer;
-	info->combination_count = 0;
+	card_t* bufferOffset = info->combinationBuffer;
+	info->nCombinations = 0;
 
-	if (info->combination_size == 0)
+	if (info->combinationSize == 0)
 	{
-		memcpy(buffer_offset, info->set, info->combination_bytes);
-		info->combination_count++;
+		memcpy (bufferOffset, info->set, info->combinationBytes);
+		info->nCombinations++;
 		return false;
 	}
 
 	do
 	{
 		// Prepare current combination.
-		for (int i = 0; i < info->combination_size; i++)
+		for (int i = 0; i < info->combinationSize; i++)
 		{
-			info->current_combination[i].rank = info->set[info->indexes[i]].rank;
-			info->current_combination[i].suit = info->set[info->indexes[i]].suit;
+			info->currentCombination[i].rank = info->set[info->indexes[i]].rank;
+			info->currentCombination[i].suit = info->set[info->indexes[i]].suit;
 		}
 
 		// Copy combination to buffer.
-		memcpy(buffer_offset, info->current_combination, info->combination_bytes);
+		memcpy (bufferOffset, info->currentCombination, info->combinationBytes);
 		// Adjust destination buffer index.
-		buffer_offset += info->combination_size;
-		info->combination_count++;
+		bufferOffset += info->combinationSize;
+		info->nCombinations++;
 		// Adjust combination indexes for next combination.
-		done = next(info->indexes, info->combination_size, info->set_size);
+		done = Next (info->indexes, info->combinationSize, info->setSize);
 	}
-	while (!done && info->combination_count < info->buffer_size);
+	while (!done && info->nCombinations < info->bufferSize);
 
 	return !done;
 }
