@@ -10,19 +10,9 @@
 #include "enum.h"
 #include "misc.h"
 #include "fsm.h"
-
-#define PAGE_SIZE 10000
-
-typedef struct
-{
-	int id;
-} thread_t;
-
-typedef struct
-{
-	board_t bestBoard;
-	int playerIndex;
-} player_info_t;
+#include "cmbntn.h"
+#include "thread.h"
+#include "thrdfnc.h"
 
 int contributions[BOARD_SIZE][DECK_SIZE] =
 {
@@ -32,12 +22,6 @@ int contributions[BOARD_SIZE][DECK_SIZE] =
 	{ 0, 0, 0, 0, 1,  5, 15, 35, 70, 126, 210, 330, 495,  715, 1001, 1365, 1820, 2380, 3060,  3876,  4845,  5985,  7315,  8855, 10626, 12650, 14950, 17550, 20475,  23751,  27405,  31465,  35960,  40920,  46376,  52360,  58905,  66045,  73815,  82251,  91390, 101270, 111930, 123410,  135751,  148995,  163185,  178365,  194580,  211876,  230300,       0 },
 	{ 0, 0, 0, 0, 0,  1,  6, 21, 56, 126, 252, 462, 792, 1287, 2002, 3003, 4368, 6188, 8568, 11628, 15504, 20349, 26334, 33649, 42504, 53130, 65780, 80730, 98280, 118755, 142506, 169911, 201376, 237336, 278256, 324632, 376992, 435897, 501942, 575757, 658008, 749398, 850668, 962598, 1086008, 1221759, 1370754, 1533939, 1712304, 1906884, 2118760, 2349060 }
 };
-
-board_t tempBoard1;
-board_t tempBoard2;
-hand_rank_result_t tempResult1;
-hand_rank_result_t tempResult2;
-player_info_t tempPlayerInfo[MAX_PLAYERS];
 
 /*
 	Returns how many combinations there are for the given poker rules.
@@ -83,441 +67,44 @@ int GetPlayerCombinations (rules_t rules)
 	return 0;
 }
 
-void CalcBestBoard (rules_t rules, board_t bestBoard)
+void InitialzeIndexes (int* indexes, long int combinations)
 {
-	board_t current;
-
-	FSM_Next (current);
-	// Initialize best board.
-	memcpy (bestBoard, current, sizeof (board_t));
-
-	while (FSM_Next (current))
-	{
-		int comparison = Compare (current, bestBoard);
-
-		if (comparison <= 0)
-		{
-			continue;
-		}
-
-		memcpy (bestBoard, current, sizeof (board_t));
-	}
 }
 
-void EvalPlayers (eval_t* evalData, board_t* boardsPage, int nPageEntries)
+void FreeThreadInfo (thread_t* threadInfo, int nThreads)
 {
-	board_t bestBoard;
-
-	for (int i = 0; i < nPageEntries; i++)
+	if (threadInfo == NULL)
 	{
-		int nBest = 0;
-
-		FSM_ResetBoardCards (boardsPage[i]);
-
-		for (int j = 0; j < evalData->nPlayers; j++)
-		{
-			FSM_ResetHoleCards (evalData->holeCards[j], evalData->nHoleCards);
-
-			CalcBestBoard (evalData->rules, bestBoard);
-
-			if (nBest == 0)
-			{
-				memcpy (tempPlayerInfo[nBest].bestBoard, bestBoard, sizeof (board_t));
-				tempPlayerInfo[nBest++].playerIndex = j;
-				continue;
-			}
-
-			int comparison = Compare (tempPlayerInfo[0].bestBoard, bestBoard);
-
-			if (comparison > 0)
-			{
-//#ifdef DEBUG
-//				D_WriteSideBySideBoards ("C:\\Users\\Gabriel\\Desktop\\log.txt", tempPlayerInfo[0].bestBoard, bestBoard);
-//#endif
-				continue;
-			}
-
-			if (comparison == 0)
-			{
-//#ifdef DEBUG
-//				D_WriteSideBySideBoards ("C:\\Users\\Gabriel\\Desktop\\ties.txt", tempPlayerInfo[0].bestBoard, bestBoard);
-//#endif
-				memcpy (tempPlayerInfo[nBest].bestBoard, bestBoard, sizeof (board_t));
-				tempPlayerInfo[nBest++].playerIndex = j;
-				continue;
-			}
-//#ifdef DEBUG
-//				D_WriteSideBySideBoards ("C:\\Users\\Gabriel\\Desktop\\log.txt", bestBoard, tempPlayerInfo[0].bestBoard);
-//#endif
-			nBest = 0;
-			memcpy (tempPlayerInfo[nBest].bestBoard, bestBoard, sizeof (board_t));
-			tempPlayerInfo[nBest++].playerIndex = j;
-		}
-
-		if (nBest == 1)
-		{
-			evalData->equities[tempPlayerInfo[0].playerIndex].wins++;
-		}
-		else
-		{
-			for (int k = 0; k < nBest; k++)
-			{
-				evalData->equities[tempPlayerInfo[k].playerIndex].ties++;
-			}
-		}
-	}
-}
-
-int CompareCards (const void* a, const void* b)
-{
-   card_t* c1 = (card_t*) a;
-   card_t* c2 = (card_t*) b;
-
-   if (c1->rank < c2->rank)
-   {
-	   return -1;
-   }
-
-   if (c1->rank > c2->rank)
-   {
-	   return 1;
-   }
-
-   return 0;
-}
-
-/*
-	Compare a set of cards.
-
-	[Returns]
-
-		-1, if first card is ranked below second card.
-		0, if both cards are ranked equal.
-		1, if first card is ranked above second card.
-*/
-int CompareSingleGroupCards (card_t* c1[], card_t* c2[], int count)
-{
-	for (int i = count - 1; i >= 0; i--)
-	{
-		if (c1[i]->rank < c2[i]->rank)
-		{
-			return -1;
-		}
-		else if (c1[i]->rank > c2[i]->rank)
-		{
-			return 1;
-		}
-	}
-	
-	return 0;
-}
-
-void CheckGroup (group_t* g, card_t* c, hand_rank_result_t* r)
-{
-	if (g->count == 1)
-	{
-		r->singleGroupCards[r->nSingleGroupCards++] = c;
-	}
-	else if (g->count == 2)
-	{
-		if (r->lowPair == NULL)
-		{
-			r->lowPair = g;
-		}
-		else
-		{
-			r->highPair = g;
-		}
-	}
-	else if (g->count == 3)
-	{
-		r->trips = g;
-	}
-	else if (g->count == 4)
-	{
-		r->four = g;
-	}
-}
-
-bool StraightSpecialCase (board_t b)
-{
-	return b[0].rank == TWO && b[1].rank == THREE && b[2].rank == FOUR && b[3].rank == FIVE && b[4].rank == ACE;
-}
-
-void ReorderStraightSpecialCase (board_t b)
-{
-	suit_t s = b[BOARD_SIZE - 1].suit;
-
-	for (int i = BOARD_SIZE - 1; i > 0; i--)
-	{
-		b[i].rank = b[i - 1].rank;
-		b[i].suit = b[i - 1].suit;
-	}
-
-	b[0].rank = ONE;
-	b[0].suit = s;
-}
-
-/*
-	Calculate a given board's rank.
-
-	[Returns]
-
-		Struct with information about the hand rank.
-*/
-void HandRank (board_t board, hand_rank_result_t* result)
-{
-	rank_t cr = NO_RANK;
-
-	memset (result, 0, sizeof (hand_rank_result_t));
-	result->nGroups = -1;
-	memcpy (result->orderedCards, board, sizeof (board_t));
-	qsort (result->orderedCards, BOARD_SIZE, sizeof (card_t), CompareCards);
-
-	if (StraightSpecialCase (result->orderedCards))
-	{
-		ReorderStraightSpecialCase (result->orderedCards);
-	}
-
-	int i = 0;
-
-	while (i < BOARD_SIZE)
-	{
-		if (i + 1 < BOARD_SIZE)
-		{
-			// Check consecutive ranks.
-			if (result->orderedCards[i].rank + 1 == result->orderedCards[i + 1].rank)
-			{
-				result->nConsecutiveRanks++;
-			}
-
-			// Check same suit.
-			if (result->orderedCards[i].suit == result->orderedCards[i + 1].suit)
-			{
-				result->nSameSuit++;
-			}
-		}
-
-		if (cr != result->orderedCards[i].rank)
-		{
-			if (cr != NO_RANK)
-			{
-				CheckGroup (&result->groups[result->nGroups], &result->orderedCards[i - 1], result);
-			}
-
-			// New group.
-			// Increment group index and initialize group.
-			result->nGroups++;
-			result->groups[result->nGroups].rank = cr = result->orderedCards[i].rank;
-			result->groups[result->nGroups].count = 1;
-		}
-		else
-		{
-			result->groups[result->nGroups].count++;
-		}
-
-		i++;
-	}
-
-	// Check last group for extra information.
-	CheckGroup (&result->groups[result->nGroups], &result->orderedCards[i - 1], result);
-	// Increment to get how many groups there are.
-	result->nGroups++;
-
-	if (result->nGroups == 2)
-	{
-		if (result->groups[0].count == 4 && result->groups[1].count == 1 || result->groups[0].count == 1 && result->groups[1].count == 4)
-		{
-			result->handRank = FOUR_OF_A_KIND;
-			return;
-		}
-
-		if (result->groups[0].count == 3 && result->groups[1].count == 2 || result->groups[0].count == 2 && result->groups[1].count == 3)
-		{
-			result->handRank = FULL_HOUSE;
-			return;
-		}
-	}
-
-	if (result->nGroups == 3)
-	{
-		if (result->groups[0].count == 3 && result->groups[1].count == 1 && result->groups[2].count == 1
-			|| result->groups[0].count == 1 && result->groups[1].count == 3 && result->groups[2].count == 1
-			|| result->groups[0].count == 1 && result->groups[1].count == 1 && result->groups[2].count == 3)
-		{
-			result->handRank = THREE_OF_A_KIND;
-			return;
-		}
-
-		if (result->groups[0].count == 2 && result->groups[1].count == 2 && result->groups[2].count == 1
-			|| result->groups[0].count == 2 && result->groups[1].count == 1 && result->groups[2].count == 2
-			|| result->groups[0].count == 1 && result->groups[1].count == 2 && result->groups[2].count == 2)
-		{
-			result->handRank = TWO_PAIR;
-			return;
-		}
-	}
-
-	if (result->nGroups == 4)
-	{
-		result->handRank = PAIR;
 		return;
 	}
 
-	if (result->nConsecutiveRanks == 4 && result->nSameSuit == 4 && result->orderedCards[0].rank == TEN)
+	for (int i = 0; i < nThreads; i++)
 	{
-		result->handRank = ROYAL_FLUSH;
-		return;
-	}
-	else if ((result->nConsecutiveRanks == 4) && result->nSameSuit == 4)
-	{
-		result->handRank = STRAIGHT_FLUSH;
-		return;
-	}
-	else if (result->nConsecutiveRanks == 4)
-	{
-		result->handRank = STRAIGHT;
-		return;
-	}
-	else if (result->nSameSuit == 4)
-	{
-		result->handRank = FLUSH;
-		return;
-	}
+		if (threadInfo[i].args.boardCards)
+		{
+			free (threadInfo[i].args.boardCards);
+		}
 
-	result->handRank = HIGH_CARD;
-}
+		for (int j = 0; j < MAX_PLAYERS; j++)
+		{
+			if (threadInfo[i].args.holeCards[j])
+			{
+				free (threadInfo[i].args.holeCards[j]);
+			}			
+		}
 
-/*
-	Compare to boards.
+		if (threadInfo[i].args.cards)
+		{
+			free (threadInfo[i].args.cards);
+		}
 
-	[Returns]
-
-		-1, if first board is ranked below second board.
-		0, if both boards are ranked equal.
-		1, if first board is ranked above second board.
-*/
-int Compare (board_t board1, board_t board2)
-{
-	HandRank (board1, &tempResult1);
-	HandRank (board2, &tempResult2);
-
-	if (tempResult1.handRank < tempResult2.handRank)
-	{
-		return -1;
+		if (threadInfo[i].args.indexes)
+		{
+			free (threadInfo[i].args.indexes);
+		}
 	}
 
-	if (tempResult1.handRank > tempResult2.handRank)
-	{
-		return 1;
-	}
-
-	if (tempResult1.handRank == HIGH_CARD || tempResult1.handRank == STRAIGHT || tempResult1.handRank == FLUSH || tempResult1.handRank == STRAIGHT_FLUSH)
-	{
-		return CompareSingleGroupCards (tempResult1.singleGroupCards, tempResult2.singleGroupCards, tempResult1.nSingleGroupCards);
-	}
-
-	if (tempResult1.handRank == PAIR)
-	{
-		if (tempResult1.lowPair->rank < tempResult2.lowPair->rank)
-		{
-			return -1;
-		}
-
-		if (tempResult1.lowPair->rank > tempResult2.lowPair->rank)
-		{
-			return 1;
-		}
-
-		return CompareSingleGroupCards (tempResult1.singleGroupCards, tempResult2.singleGroupCards, tempResult1.nSingleGroupCards);
-	}
-
-	if (tempResult1.handRank == TWO_PAIR)
-	{
-		if (tempResult1.highPair->rank < tempResult2.highPair->rank)
-		{
-			return -1;
-		}
-
-		if (tempResult1.highPair->rank > tempResult2.highPair->rank)
-		{
-			return 1;
-		}
-
-		if (tempResult1.lowPair->rank < tempResult2.lowPair->rank)
-		{
-			return -1;
-		}
-
-		if (tempResult1.lowPair->rank > tempResult2.lowPair->rank)
-		{
-			return 1;
-		}
-
-		return CompareSingleGroupCards (tempResult1.singleGroupCards, tempResult2.singleGroupCards, tempResult1.nSingleGroupCards);
-	}
-
-	if (tempResult1.handRank == THREE_OF_A_KIND)
-	{
-		if (tempResult1.trips->rank < tempResult2.trips->rank)
-		{
-			return -1;
-		}
-
-		if (tempResult1.trips->rank > tempResult2.trips->rank)
-		{
-			return 1;
-		}
-
-		// This can only happen with more than one deck.
-		return CompareSingleGroupCards (tempResult1.singleGroupCards, tempResult2.singleGroupCards, tempResult1.nSingleGroupCards);
-	}
-
-	if (tempResult1.handRank == FULL_HOUSE)
-	{
-		if (tempResult1.trips->rank < tempResult2.trips->rank)
-		{
-			return -1;
-		}
-
-		if (tempResult1.trips->rank > tempResult2.trips->rank)
-		{
-			return 1;
-		}
-
-		if (tempResult1.lowPair->rank < tempResult2.lowPair->rank)
-		{
-			return -1;
-		}
-
-		if (tempResult1.lowPair->rank > tempResult2.lowPair->rank)
-		{
-			return 1;
-		}
-
-		return 0;
-	}
-
-	if (tempResult1.handRank == FOUR_OF_A_KIND)
-	{
-		if (tempResult1.four->rank < tempResult2.four->rank)
-		{
-			return -1;
-		}
-
-		if (tempResult1.four->rank > tempResult2.four->rank)
-		{
-			return 1;
-		}
-
-		// This can only happen with more than one deck.
-		return CompareSingleGroupCards (tempResult1.singleGroupCards, tempResult2.singleGroupCards, tempResult1.nSingleGroupCards);
-	}
-
-	if (tempResult1.handRank == ROYAL_FLUSH)
-	{
-		return 0;
-	}
+	free (threadInfo);
 }
 
 bool Eval (eval_t* evalData)
@@ -639,70 +226,68 @@ bool Eval (eval_t* evalData)
 
 	int combinationSize = BOARD_SIZE - evalData->nBoardCards;
 	int nPageEntries;
-	board_t* boardsPage = (board_t*) malloc(PAGE_SIZE * sizeof (board_t));
 
 	FSM_ResetRules (evalData->rules);
 
-	//evalData->nCores
-
 	if (combinationSize == 0)
 	{
-		nPageEntries = 1;
-		evalData->nBoards += nPageEntries;
-		memcpy (boardsPage[0], evalData->boardCards, sizeof (board_t));
-		EvalPlayers (evalData, boardsPage, nPageEntries);
+		// TODO: create a single thread.
+
+		//nPageEntries = 1;
+		//evalData->nBoards += nPageEntries;
+		//memcpy (boardsPage[0], evalData->boardCards, sizeof (board_t));
+		//EvalPlayers (evalData, boardsPage, nPageEntries);
 	}
 	else
 	{
-		bool more = false;
+		long int combinations = CMB_Combination (nCards, combinationSize);
+		evalData->nBoards += combinations;
 
-		combination_info_t* info = E_Initialize (deck, nCards, combinationSize, PAGE_SIZE);
+		int combinationsPerThread = evalData->nCores / combinations;
+		int reminder = evalData->nCores % combinations;
 
-		do
+		thread_t* threadInfo = (thread_t*) malloc (evalData->nCores * sizeof (thread_t));
+
+		for (int i = 0; i < evalData->nCores; i++)
 		{
-			more = E_Combinations (info);
-			evalData->nBoards += info->nCombinations;
-			nPageEntries = 0;
+			threadInfo[i].args.rules = evalData->rules;
+			threadInfo[i].args.nPlayers = evalData->nPlayers;
+			threadInfo[i].args.nBoardCards = evalData->nBoardCards;
+			threadInfo[i].args.nHoleCards = evalData->nHoleCards;
+			threadInfo[i].args.boardCards = (card_t*) malloc (evalData->nBoardCards * sizeof (card_t));
+			memcpy (threadInfo[i].args.boardCards, evalData->boardCards, evalData->nBoardCards * sizeof (card_t));
 
-			if (evalData->nBoardCards == 0)
+			for (int j = 0; j < MAX_PLAYERS; j++)
 			{
-//#ifdef DEBUG
-//				D_WriteBoards ("C:\\Users\\Gabriel\\Desktop\\boards.txt", (board_t*) info->combinationBuffer, info->nCombinations);
-//#endif
-				EvalPlayers (evalData, (board_t*) info->combinationBuffer, info->nCombinations);
+				threadInfo[i].args.holeCards[j] = (card_t*) malloc (evalData->nHoleCards * sizeof (card_t));
+				memcpy (threadInfo[i].args.holeCards[j], evalData->holeCards[j], evalData->nHoleCards * sizeof (card_t));
 			}
-			else
-			{
-				while (nPageEntries < info->nCombinations)
-				{
-					// Generate combination.
-					for (int i = 0, j = 0; i < BOARD_SIZE; i++)
-					{
-						if (i < evalData->nBoardCards)
-						{
-							// Take board card if any.
-							boardsPage[nPageEntries][i].rank = evalData->boardCards[i].rank;
-							boardsPage[nPageEntries][i].suit = evalData->boardCards[i].suit;
-						}
-						else
-						{
-							// Take remaining deck card to complete combination.
-							boardsPage[nPageEntries][i].rank = info->combinationBuffer[nPageEntries * combinationSize + j].rank;
-							boardsPage[nPageEntries][i].suit = info->combinationBuffer[nPageEntries * combinationSize + j++].suit;
-						}
-					}
 
-					nPageEntries++;
-				}
-//#ifdef DEBUG
-//				D_WriteBoards ("C:\\Users\\Gabriel\\Desktop\\boards.txt", boardsPage, nPageEntries);
-//#endif
-				EvalPlayers (evalData, boardsPage, nPageEntries);
+			threadInfo[i].args.cards = (card_t*) malloc (nCards * sizeof (card_t));
+			memcpy (threadInfo[i].args.cards, deck, nCards * sizeof (card_t));
+			threadInfo[i].args.nCards = nCards;
+			threadInfo[i].args.nCombinations = combinationsPerThread + i < reminder ? 1 : 0;
+			threadInfo[i].args.nCombinationCards = combinationSize;
+			threadInfo[i].args.indexes = (int*) malloc (combinationSize * sizeof (int));
+
+			InitialzeIndexes (threadInfo[i].args.indexes, combinations);
+			combinations -= threadInfo[i].args.nCombinations;
+
+			threadInfo[i].id = TH_CreateThread (ThreadFunction, &threadInfo[i].args);
+
+			if (!VALID_THREAD_ID(threadInfo[i].id))
+			{
+				evalData->errors |= INTERNAL_ERROR;
+
+				FreeThreadInfo (threadInfo, evalData->nCores);
+
+				return false;
 			}
 		}
-		while (more);
 
-		E_Dispose (info);
+		// TODO: wait for threads.
+
+		FreeThreadInfo (threadInfo, evalData->nCores);
 	}
 
 	for (int i = 0; i < evalData->nPlayers; i++)
@@ -711,11 +296,6 @@ bool Eval (eval_t* evalData)
 		evalData->equities[i].winProbability = (double) evalData->equities[i].wins / (double) evalData->nBoards;
 		evalData->equities[i].tieProbability = (double) evalData->equities[i].ties / (double) evalData->nBoards;
 		evalData->equities[i].loseProbability = (double) loses / (double) evalData->nBoards;
-	}
-
-	if (boardsPage)
-	{
-		free (boardsPage);
 	}
 
 	return true;

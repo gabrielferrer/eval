@@ -9,6 +9,7 @@
 #include "misc.h"
 #include "fsm.h"
 #include "core.h"
+#include "thrdfnc.h"
 
 #ifdef DEBUG
 #include "debug.h"

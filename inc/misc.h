@@ -16,6 +16,6 @@ char* HandRankToString (hand_rank_t handRank);
 
 card_t* StringToCards (char* cardsString, card_t* cards);
 
-char* card_to_string (card_t* card, char* destination);
+char* CardToString (card_t* card, char* destination);
 
 #endif

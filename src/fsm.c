@@ -112,7 +112,7 @@ bool Holdem2 (board_t board)
 		board[i].suit = BoardCards[i].suit;
 	}
 
-	if (Next (I0, 2, BOARD_SIZE))
+	if (CMB_Next (I0, 2, BOARD_SIZE))
 	{
 		CurrentState++;
 	}
@@ -149,9 +149,9 @@ bool Omaha (board_t board)
 		board[i].suit = BoardCards[i].suit;
 	}
 
-	if (Next (I1, 2, BOARD_SIZE))
+	if (CMB_Next (I1, 2, BOARD_SIZE))
 	{
-		if (Next (I0, 2, HoleCardsCount))
+		if (CMB_Next (I0, 2, HoleCardsCount))
 		{
 			CurrentState++;
 		}		

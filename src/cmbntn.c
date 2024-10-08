@@ -1,6 +1,6 @@
 #include "cmbntn.h"
 
-bool NextInternal (int x[], int k, int c, int i)
+bool CMB_NextInternal (int x[], int k, int c, int i)
 {
 	if (i < 0)
 	{
@@ -22,10 +22,37 @@ bool NextInternal (int x[], int k, int c, int i)
 		return false;
 	}
 
-	return NextInternal (x, k, x[i], i-1);
+	return CMB_NextInternal (x, k, x[i], i-1);
 }
 
-bool Next (int x[], int k, int c)
+bool CMB_Next (int x[], int k, int c)
 {
-	return NextInternal (x, k, c, k - 1);
+	return CMB_NextInternal (x, k, c, k - 1);
+}
+
+long int CMB_Product (long int from, long int to)
+{
+	long int r = 1;
+
+	for (long int i = from; i <= to; i++)
+	{
+		r *= i;
+	}
+
+	return r;
+}
+
+long int CMB_Combination (long int n, long int k)
+{
+	if (n < k)
+	{
+		return 0;
+	}
+
+	if (n == k)
+	{
+		return 1;
+	}
+
+	return k > n - k ? CMB_Product (k + 1, n) / CMB_Product (1, n - k) : CMB_Product (n - k + 1, n) / CMB_Product (1, k);
 }

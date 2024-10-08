@@ -4,13 +4,13 @@ SRCDIR=src
 BINDIR=bin
 OBJDIR=obj
 DEPENDENCIES=
-TESTSOBJDIRS="$(OBJDIR)\tests.o" "$(OBJDIR)\eval.o" "$(OBJDIR)\enum.o" "$(OBJDIR)\misc.o" "$(OBJDIR)\fsm.o" \
-"$(OBJDIR)\cmbntn.o" "$(OBJDIR)\core.o"
-COMBSOBJDIRS="$(OBJDIR)\combs.o"
-TESTSOBJS=tests.o eval.o enum.o misc.o fsm.o cmbntn.o core.o
-COMBSOBJS=combs.o
+TESTSOBJDIRS="$(OBJDIR)\tests.o" "$(OBJDIR)\eval.o" "$(OBJDIR)\misc.o" "$(OBJDIR)\fsm.o" \
+"$(OBJDIR)\cmbntn.o" "$(OBJDIR)\thrdfnc.o" "$(OBJDIR)\core.o" "$(OBJDIR)\thread.o"
+COMBSOBJDIRS="$(OBJDIR)\combs.o" "$(OBJDIR)\cmbntn.o"
+TESTSOBJS=tests.o eval.o misc.o fsm.o cmbntn.o thrdfnc.o core.o thread.o
+COMBSOBJS=combs.o cmbntn.o
 BINS=tests combs
-CFLAGS=$(INCLUDE)
+CFLAGS=$(INCLUDE) -DWIN
 
 ifdef DEBUG
 CFLAGS+=-g -DDEBUG
@@ -31,9 +31,6 @@ combs.o:
 eval.o:
 	$(CC) $(CFLAGS) -c "$(SRCDIR)\eval.c" -o "$(OBJDIR)\eval.o"
 
-enum.o:
-	$(CC) $(CFLAGS) -c "$(SRCDIR)\enum.c" -o "$(OBJDIR)\enum.o"
-	
 misc.o:
 	$(CC) $(CFLAGS) -c "$(SRCDIR)\misc.c" -o "$(OBJDIR)\misc.o"
 
@@ -43,8 +40,14 @@ fsm.o:
 cmbntn.o:
 	$(CC) $(CFLAGS) -c "$(SRCDIR)\cmbntn.c" -o "$(OBJDIR)\cmbntn.o"
 
+thrdfnc.o:
+	$(CC) $(CFLAGS) -c "$(SRCDIR)\thrdfnc.c" -o "$(OBJDIR)\thrdfnc.o"
+
 core.o:
 	$(CC) $(CFLAGS) -c "$(SRCDIR)\win\core.c" -o "$(OBJDIR)\core.o"
+
+thread.o:
+	$(CC) $(CFLAGS) -c "$(SRCDIR)\win\thread.c" -o "$(OBJDIR)\thread.o"
 
 debug.o:
 	$(CC) $(CFLAGS) -c "$(SRCDIR)\debug.c" -o "$(OBJDIR)\debug.o"

@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stddef.h>
 #include <string.h>
+#include "cmbntn.h"
 
 #ifdef DEBUG
 #include "debug.h"
@@ -19,33 +20,6 @@ typedef struct
 range_t ranges[INDEXES] = {	{ 0, 47 }, { 1, 48 }, { 2, 49 }, { 3, 50 }, { 4, 51 } };
 
 long int result[INDEXES][SET_SIZE];
-
-long int Product (long int from, long int to)
-{
-	long int r = 1;
-
-	for (long int i = from; i <= to; i++)
-	{
-		r *= i;
-	}
-
-	return r;
-}
-
-long int Combination (long int n, long int k)
-{
-	if (n < k)
-	{
-		return 0;
-	}
-
-	if (n == k)
-	{
-		return 1;
-	}
-
-	return k > n - k ? Product (k + 1, n) / Product (1, n - k) : Product (n - k + 1, n) / Product (1, k);
-}
 
 int main (int argc, char* argv[])
 {
@@ -72,7 +46,7 @@ int main (int argc, char* argv[])
 	{
 		for (int j = ranges[i].min; j <= ranges[i].max; j++)
 		{
-			result[i][j] = Combination (j, i + 1);
+			result[i][j] = CMB_Combination (j, i + 1);
 		}
 	}
 
