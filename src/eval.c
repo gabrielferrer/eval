@@ -1,6 +1,7 @@
 #include <stddef.h>
 #include <string.h>
 #include <stdlib.h>
+#include <math.h>
 
 #ifdef DEBUG
 #include "debug.h"
@@ -13,6 +14,12 @@
 #include "cmbntn.h"
 #include "thread.h"
 #include "thrdfnc.h"
+
+struct range_t
+{
+	int min;
+	int max;
+};
 
 int contributions[BOARD_SIZE][DECK_SIZE] =
 {
@@ -30,7 +37,7 @@ int contributions[BOARD_SIZE][DECK_SIZE] =
 
 		The number of combinations.
 */
-int GetPlayerCombinations (rules_t rules)
+int GetPlayerCombinations (enum rules_t rules)
 {
 	if (rules == HOLDEM)
 	{
@@ -67,49 +74,70 @@ int GetPlayerCombinations (rules_t rules)
 	return 0;
 }
 
-void InitialzeIndexes (int* indexes, long int combinations)
+void InitialzeIndexes (int* indexes, int nIndexes, struct range_t* ranges, int nCombinations)
 {
-}
-
-void FreeThreadInfo (thread_t* threadInfo, int nThreads)
-{
-	if (threadInfo == NULL)
+	for (int i = 0; i < nIndexes; i++)
 	{
-		return;
-	}
+		int pivot = (ranges[i].max - ranges[i].min) / 2;
+		int nextPivot = pivot + 1;
 
-	for (int i = 0; i < nThreads; i++)
-	{
-		if (threadInfo[i].args.boardCards)
+		while (pivot < ranges[i].max && !(contributions[i][pivot] > 0 && contributions[i][nextPivot] < 0))
 		{
-			free (threadInfo[i].args.boardCards);
-		}
-
-		for (int j = 0; j < MAX_PLAYERS; j++)
-		{
-			if (threadInfo[i].args.holeCards[j])
+			if (nCombinations - contributions[i][pivot] > 0)
 			{
-				free (threadInfo[i].args.holeCards[j]);
-			}			
+				pivot = (ranges[i].max - pivot) / 2;
+			}
+			else if (nCombinations - contributions[i][pivot] < 0)
+			{
+				pivot = (pivot - ranges[i].min) / 2;
+			}
+
+			nextPivot = pivot + 1;
 		}
 
-		if (threadInfo[i].args.cards)
-		{
-			free (threadInfo[i].args.cards);
-		}
-
-		if (threadInfo[i].args.indexes)
-		{
-			free (threadInfo[i].args.indexes);
-		}
+		indexes[i] = pivot;
+		nCombinations -= contributions[i][pivot];
 	}
-
-	free (threadInfo);
 }
 
-bool Eval (eval_t* evalData)
+void FreeThreadInfo (thread_id_t* threadIds, struct thread_args_t* threadArgs, int nThreads, int nPlayers)
 {
-	card_t deck[DECK_SIZE];
+	if (threadArgs)
+	{
+		for (int i = 0; i < nThreads; i++)
+		{
+			if (threadArgs[i].boardCards) free (threadArgs[i].boardCards);
+
+			for (int j = 0; j < nPlayers; j++)
+			{
+				if (threadArgs[i].holeCards[j]) free (threadArgs[i].holeCards[j]);
+			}
+
+			if (threadArgs[i].cards) free (threadArgs[i].cards);
+
+			if (threadArgs[i].indexes) free (threadArgs[i].indexes);
+		}
+		
+		free (threadArgs);
+	}
+
+	if (threadIds)
+	{
+		for (int i = 0; i < nThreads; i++)
+		{
+			if (VALID_THREAD_ID(threadIds[i]))
+			{
+				TH_DisposeThread (threadIds[i]);
+			}
+		}
+
+		free (threadIds);
+	}
+}
+
+bool Eval (struct eval_t* evalData)
+{
+	struct card_t deck[DECK_SIZE];
 	evalData->nBoards = 0;
 	evalData->errors = 0;
 
@@ -131,9 +159,9 @@ bool Eval (eval_t* evalData)
 	// Initialize deck.
 	// It's important to traverse ranks first and then suits.
 	// If not, INDEX macro will fail.
-	for (rank_t r = TWO; r <= ACE; r++)
+	for (enum rank_t r = TWO; r <= ACE; r++)
 	{
-		for (suit_t s = CLUBS; s <= SPADES; s++)
+		for (enum suit_t s = CLUBS; s <= SPADES; s++)
 		{
 			int i = INDEX (r, s);
 			deck[i].rank = r;
@@ -225,69 +253,114 @@ bool Eval (eval_t* evalData)
 	}
 
 	int combinationSize = BOARD_SIZE - evalData->nBoardCards;
-	int nPageEntries;
-
-	FSM_ResetRules (evalData->rules);
 
 	if (combinationSize == 0)
 	{
-		// TODO: create a single thread.
+		evalData->nBoards = 1;
 
-		//nPageEntries = 1;
-		//evalData->nBoards += nPageEntries;
-		//memcpy (boardsPage[0], evalData->boardCards, sizeof (board_t));
-		//EvalPlayers (evalData, boardsPage, nPageEntries);
+		thread_id_t threadId;
+		struct thread_args_t threadArgs;
+
+		threadArgs.rules = evalData->rules;
+		threadArgs.nPlayers = evalData->nPlayers;
+		threadArgs.nBoardCards = evalData->nBoardCards;
+		threadArgs.nHoleCards = evalData->nHoleCards;
+		threadArgs.boardCards = (struct card_t*) malloc (evalData->nBoardCards * sizeof (struct card_t));
+		memcpy (threadArgs.boardCards, evalData->boardCards, evalData->nBoardCards * sizeof (struct card_t));
+
+		for (int j = 0; j < evalData->nPlayers; j++)
+		{
+			threadArgs.holeCards[j] = (struct card_t*) malloc (evalData->nHoleCards * sizeof (struct card_t));
+			memcpy (threadArgs.holeCards[j], evalData->holeCards[j], evalData->nHoleCards * sizeof (struct card_t));
+		}
+
+		threadArgs.cards = (struct card_t*) malloc (nCards * sizeof (struct card_t));
+		memcpy (threadArgs.cards, deck, nCards * sizeof (struct card_t));
+		threadArgs.nCards = nCards;
+		threadArgs.nCombinations = 0;
+		threadArgs.nCombinationCards = combinationSize;
+		threadArgs.indexes = NULL;
+
+		threadId = TH_CreateThread (ThreadFunction, &threadArgs);
+
+		if (!VALID_THREAD_ID(threadId))
+		{
+			evalData->errors |= INTERNAL_ERROR;
+
+			FreeThreadInfo (&threadId, &threadArgs, 1, evalData->nPlayers);
+
+			return false;
+		}
+
+		TH_WaitThreads (&threadId, 1);
 	}
 	else
 	{
-		long int combinations = CMB_Combination (nCards, combinationSize);
-		evalData->nBoards += combinations;
+		long int nCombinations = CMB_Combination (nCards, combinationSize);
+		evalData->nBoards += nCombinations;
 
-		int combinationsPerThread = evalData->nCores / combinations;
-		int reminder = evalData->nCores % combinations;
+		int combinationsPerThread = evalData->nCores / nCombinations;
+		int reminder = evalData->nCores % nCombinations;
 
-		thread_t* threadInfo = (thread_t*) malloc (evalData->nCores * sizeof (thread_t));
+		int minIndex = 0;
+		int maxIndex = nCards - combinationSize;
+		struct range_t* ranges = (struct range_t*) malloc (combinationSize * sizeof (struct range_t));
+
+		for (int i = 0; i < combinationSize; i++, minIndex++, maxIndex++)
+		{
+			ranges[i].min = minIndex;
+			ranges[i].max = maxIndex;
+		}
+
+		thread_id_t* threadIds = (thread_id_t*) malloc (evalData->nCores * sizeof (thread_id_t));
+		struct thread_args_t* threadArgs = (struct thread_args_t*) malloc (evalData->nCores * sizeof (struct thread_args_t));
 
 		for (int i = 0; i < evalData->nCores; i++)
 		{
-			threadInfo[i].args.rules = evalData->rules;
-			threadInfo[i].args.nPlayers = evalData->nPlayers;
-			threadInfo[i].args.nBoardCards = evalData->nBoardCards;
-			threadInfo[i].args.nHoleCards = evalData->nHoleCards;
-			threadInfo[i].args.boardCards = (card_t*) malloc (evalData->nBoardCards * sizeof (card_t));
-			memcpy (threadInfo[i].args.boardCards, evalData->boardCards, evalData->nBoardCards * sizeof (card_t));
+			threadArgs[i].rules = evalData->rules;
+			threadArgs[i].nPlayers = evalData->nPlayers;
+			threadArgs[i].nBoardCards = evalData->nBoardCards;
+			threadArgs[i].nHoleCards = evalData->nHoleCards;
+			threadArgs[i].boardCards = (struct card_t*) malloc (evalData->nBoardCards * sizeof (struct card_t));
+			memcpy (threadArgs[i].boardCards, evalData->boardCards, evalData->nBoardCards * sizeof (struct card_t));
 
-			for (int j = 0; j < MAX_PLAYERS; j++)
+			for (int j = 0; j < evalData->nPlayers; j++)
 			{
-				threadInfo[i].args.holeCards[j] = (card_t*) malloc (evalData->nHoleCards * sizeof (card_t));
-				memcpy (threadInfo[i].args.holeCards[j], evalData->holeCards[j], evalData->nHoleCards * sizeof (card_t));
+				threadArgs[i].holeCards[j] = (struct card_t*) malloc (evalData->nHoleCards * sizeof (struct card_t));
+				memcpy (threadArgs[i].holeCards[j], evalData->holeCards[j], evalData->nHoleCards * sizeof (struct card_t));
 			}
 
-			threadInfo[i].args.cards = (card_t*) malloc (nCards * sizeof (card_t));
-			memcpy (threadInfo[i].args.cards, deck, nCards * sizeof (card_t));
-			threadInfo[i].args.nCards = nCards;
-			threadInfo[i].args.nCombinations = combinationsPerThread + i < reminder ? 1 : 0;
-			threadInfo[i].args.nCombinationCards = combinationSize;
-			threadInfo[i].args.indexes = (int*) malloc (combinationSize * sizeof (int));
+			threadArgs[i].cards = (struct card_t*) malloc (nCards * sizeof (struct card_t));
+			memcpy (threadArgs[i].cards, deck, nCards * sizeof (struct card_t));
+			threadArgs[i].nCards = nCards;
+			threadArgs[i].nCombinations = combinationsPerThread + i < reminder ? 1 : 0;
+			threadArgs[i].nCombinationCards = combinationSize;
+			threadArgs[i].indexes = (int*) malloc (combinationSize * sizeof (int));
 
-			InitialzeIndexes (threadInfo[i].args.indexes, combinations);
-			combinations -= threadInfo[i].args.nCombinations;
+			InitialzeIndexes (threadArgs[i].indexes, combinationSize, ranges, nCombinations);
 
-			threadInfo[i].id = TH_CreateThread (ThreadFunction, &threadInfo[i].args);
+			nCombinations -= threadArgs[i].nCombinations;
 
-			if (!VALID_THREAD_ID(threadInfo[i].id))
+			threadIds[i] = TH_CreateThread (ThreadFunction, &threadIds[i]);
+
+			if (!VALID_THREAD_ID(threadIds[i]))
 			{
 				evalData->errors |= INTERNAL_ERROR;
 
-				FreeThreadInfo (threadInfo, evalData->nCores);
+				FreeThreadInfo (threadIds, threadArgs, evalData->nCores, evalData->nPlayers);
 
 				return false;
 			}
 		}
 
-		// TODO: wait for threads.
+		TH_WaitThreads (threadIds, evalData->nCores);
 
-		FreeThreadInfo (threadInfo, evalData->nCores);
+		if (ranges)
+		{
+			free (ranges);
+		}
+
+		FreeThreadInfo (threadIds, threadArgs, evalData->nCores, evalData->nPlayers);
 	}
 
 	for (int i = 0; i < evalData->nPlayers; i++)

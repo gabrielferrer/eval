@@ -7,86 +7,87 @@
 
 #define PAGE_SIZE 10000
 
-typedef struct
+struct player_info_t
 {
-	board_t bestBoard;
+	struct card_t bestBoard[BOARD_SIZE];
 	int playerIndex;
-} player_info_t;
+};
 
-typedef struct
+struct thread_context_t
 {
-	rules_t rules;
+	enum rules_t rules;
 	int nPlayers;
 	int nBoardCards;
 	int nHoleCards;
-	card_t* boardCards;
-	card_t* holeCards[MAX_PLAYERS];
-	card_t* cards;
+	struct card_t* boardCards;
+	struct card_t* holeCards[MAX_PLAYERS];
+	struct card_t* cards;
 	int nCards;
 	int nCombinations;
 	int nCombinationCards;
 	int* indexes;
-	board_t* boardsPage;
+	struct card_t (*boardsPage)[BOARD_SIZE];
 	int nCombinationBytes;
-	card_t* combinationBuffer;
-	card_t* bufferOffset;
+	struct card_t* combinationBuffer;
+	struct card_t* bufferOffset;
 	int nCombinationsInBuffer;
-	card_t* currentCombination;
+	struct card_t* currentCombination;
 	int nPageEntries;
-	thread_result_t results[MAX_PLAYERS];
-	player_info_t playerInfo[MAX_PLAYERS];
-} thread_context_t;
+	struct fsm_t fsm;
+	struct thread_result_t results[MAX_PLAYERS];
+	struct player_info_t playerInfo[MAX_PLAYERS];
+};
 
-bool StraightSpecialCase (board_t b)
+bool StraightSpecialCase (struct card_t board[BOARD_SIZE])
 {
-	return b[0].rank == TWO && b[1].rank == THREE && b[2].rank == FOUR && b[3].rank == FIVE && b[4].rank == ACE;
+	return board[0].rank == TWO && board[1].rank == THREE && board[2].rank == FOUR && board[3].rank == FIVE && board[4].rank == ACE;
 }
 
-void ReorderStraightSpecialCase (board_t b)
+void ReorderStraightSpecialCase (struct card_t board[BOARD_SIZE])
 {
-	suit_t s = b[BOARD_SIZE - 1].suit;
+	enum suit_t s = board[BOARD_SIZE - 1].suit;
 
 	for (int i = BOARD_SIZE - 1; i > 0; i--)
 	{
-		b[i].rank = b[i - 1].rank;
-		b[i].suit = b[i - 1].suit;
+		board[i].rank = board[i - 1].rank;
+		board[i].suit = board[i - 1].suit;
 	}
 
-	b[0].rank = ONE;
-	b[0].suit = s;
+	board[0].rank = ONE;
+	board[0].suit = s;
 }
 
-void CheckGroup (group_t* g, card_t* c, hand_rank_result_t* r)
+void CheckGroup (struct group_t* group, struct card_t* card, struct hand_rank_result_t* result)
 {
-	if (g->count == 1)
+	if (group->count == 1)
 	{
-		r->singleGroupCards[r->nSingleGroupCards++] = c;
+		result->singleGroupCards[result->nSingleGroupCards++] = card;
 	}
-	else if (g->count == 2)
+	else if (group->count == 2)
 	{
-		if (r->lowPair == NULL)
+		if (result->lowPair == NULL)
 		{
-			r->lowPair = g;
+			result->lowPair = group;
 		}
 		else
 		{
-			r->highPair = g;
+			result->highPair = group;
 		}
 	}
-	else if (g->count == 3)
+	else if (group->count == 3)
 	{
-		r->trips = g;
+		result->trips = group;
 	}
-	else if (g->count == 4)
+	else if (group->count == 4)
 	{
-		r->four = g;
+		result->four = group;
 	}
 }
 
 int CompareCards (const void* a, const void* b)
 {
-   card_t* c1 = (card_t*) a;
-   card_t* c2 = (card_t*) b;
+   struct card_t* c1 = (struct card_t*) a;
+   struct card_t* c2 = (struct card_t*) b;
 
    if (c1->rank < c2->rank)
    {
@@ -108,14 +109,14 @@ int CompareCards (const void* a, const void* b)
 
 		Struct with information about the hand rank.
 */
-void HandRank (board_t board, hand_rank_result_t* result)
+void HandRank (struct card_t board[BOARD_SIZE], struct hand_rank_result_t* result)
 {
-	rank_t cr = NO_RANK;
+	enum rank_t cr = NO_RANK;
 
-	memset (result, 0, sizeof (hand_rank_result_t));
+	memset (result, 0, sizeof (struct hand_rank_result_t));
 	result->nGroups = -1;
-	memcpy (result->orderedCards, board, sizeof (board_t));
-	qsort (result->orderedCards, BOARD_SIZE, sizeof (card_t), CompareCards);
+	memcpy (result->orderedCards, board, sizeof (struct card_t [BOARD_SIZE]));
+	qsort (result->orderedCards, BOARD_SIZE, sizeof (struct card_t), CompareCards);
 
 	if (StraightSpecialCase (result->orderedCards))
 	{
@@ -240,7 +241,7 @@ void HandRank (board_t board, hand_rank_result_t* result)
 		0, if both cards are ranked equal.
 		1, if first card is ranked above second card.
 */
-int CompareSingleGroupCards (card_t* c1[], card_t* c2[], int count)
+int CompareSingleGroupCards (struct card_t* c1[], struct card_t* c2[], int count)
 {
 	for (int i = count - 1; i >= 0; i--)
 	{
@@ -266,10 +267,10 @@ int CompareSingleGroupCards (card_t* c1[], card_t* c2[], int count)
 		0, if both boards are ranked equal.
 		1, if first board is ranked above second board.
 */
-int Compare (board_t board1, board_t board2)
+int Compare (struct card_t board1[BOARD_SIZE], struct card_t board2[BOARD_SIZE])
 {
-	hand_rank_result_t tempResult1;
-	hand_rank_result_t tempResult2;	
+	struct hand_rank_result_t tempResult1;
+	struct hand_rank_result_t tempResult2;	
 
 	HandRank (board1, &tempResult1);
 	HandRank (board2, &tempResult2);
@@ -392,15 +393,15 @@ int Compare (board_t board1, board_t board2)
 	}
 }
 
-void CalcBestBoard (rules_t rules, board_t bestBoard)
+void CalcBestBoard (struct thread_context_t* context, struct card_t bestBoard[BOARD_SIZE])
 {
-	board_t current;
+	struct card_t current[BOARD_SIZE];
 
-	FSM_Next (current);
+	FSM_Next (current, &context->fsm);
 	// Initialize best board.
-	memcpy (bestBoard, current, sizeof (board_t));
+	memcpy (bestBoard, current, sizeof (struct card_t [BOARD_SIZE]));
 
-	while (FSM_Next (current))
+	while (FSM_Next (current, &context->fsm))
 	{
 		int comparison = Compare (current, bestBoard);
 
@@ -409,29 +410,29 @@ void CalcBestBoard (rules_t rules, board_t bestBoard)
 			continue;
 		}
 
-		memcpy (bestBoard, current, sizeof (board_t));
+		memcpy (bestBoard, current, sizeof (struct card_t [BOARD_SIZE]));
 	}
 }
 
-void EvalPlayers (thread_context_t* context)
+void EvalPlayers (struct thread_context_t* context)
 {
-	board_t bestBoard;
+	struct card_t bestBoard[BOARD_SIZE];
 
 	for (int i = 0; i < context->nPageEntries; i++)
 	{
 		int nBest = 0;
 
-		FSM_ResetBoardCards (context->boardsPage[i]);
+		FSM_ResetBoardCards (context->boardsPage[i], &context->fsm);
 
 		for (int j = 0; j < context->nPlayers; j++)
 		{
-			FSM_ResetHoleCards (context->holeCards[j], context->nHoleCards);
+			FSM_ResetHoleCards (context->holeCards[j], context->nHoleCards, &context->fsm);
 
-			CalcBestBoard (context->rules, bestBoard);
+			CalcBestBoard (context, bestBoard);
 
 			if (nBest == 0)
 			{
-				memcpy (context->playerInfo[nBest].bestBoard, bestBoard, sizeof (board_t));
+				memcpy (context->playerInfo[nBest].bestBoard, bestBoard, sizeof (struct card_t [BOARD_SIZE]));
 				context->playerInfo[nBest++].playerIndex = j;
 				continue;
 			}
@@ -451,7 +452,7 @@ void EvalPlayers (thread_context_t* context)
 //#ifdef DEBUG
 //				D_WriteSideBySideBoards ("C:\\Users\\Gabriel\\Desktop\\ties.txt", context->playerInfo[0].bestBoard, bestBoard);
 //#endif
-				memcpy (context->playerInfo[nBest].bestBoard, bestBoard, sizeof (board_t));
+				memcpy (context->playerInfo[nBest].bestBoard, bestBoard, sizeof (struct card_t [BOARD_SIZE]));
 				context->playerInfo[nBest++].playerIndex = j;
 				continue;
 			}
@@ -459,7 +460,7 @@ void EvalPlayers (thread_context_t* context)
 //				D_WriteSideBySideBoards ("C:\\Users\\Gabriel\\Desktop\\log.txt", bestBoard, context->playerInfo[0].bestBoard);
 //#endif
 			nBest = 0;
-			memcpy (context->playerInfo[nBest].bestBoard, bestBoard, sizeof (board_t));
+			memcpy (context->playerInfo[nBest].bestBoard, bestBoard, sizeof (struct card_t [BOARD_SIZE]));
 			context->playerInfo[nBest++].playerIndex = j;
 		}
 
@@ -477,37 +478,39 @@ void EvalPlayers (thread_context_t* context)
 	}
 }
 
-void InitializeThreadContext (thread_context_t* context, thread_args_t* threadArgs)
+void InitializeThreadContext (struct thread_context_t* context, struct thread_args_t* threadArgs)
 {
 	context->rules = threadArgs->rules;
 	context->nPlayers = threadArgs->nPlayers;
 	context->nBoardCards = threadArgs->nBoardCards;
 	context->nHoleCards = threadArgs->nHoleCards;
-	context->boardCards = (card_t*) malloc (threadArgs->nBoardCards * sizeof (card_t));
-	memcpy (context->boardCards, threadArgs->boardCards, threadArgs->nBoardCards * sizeof (card_t));
+	context->boardCards = (struct card_t*) malloc (threadArgs->nBoardCards * sizeof (struct card_t));
+	memcpy (context->boardCards, threadArgs->boardCards, threadArgs->nBoardCards * sizeof (struct card_t));
 
-	for (int i = 0; i < MAX_PLAYERS; i++)
+	for (int i = 0; i < threadArgs->nPlayers; i++)
 	{
-		context->holeCards[i] = (card_t*) malloc (threadArgs->nHoleCards * sizeof (card_t));
-		memcpy (context->holeCards[i], threadArgs->holeCards[i], threadArgs->nHoleCards * sizeof (card_t));
+		context->holeCards[i] = (struct card_t*) malloc (threadArgs->nHoleCards * sizeof (struct card_t));
+		memcpy (context->holeCards[i], threadArgs->holeCards[i], threadArgs->nHoleCards * sizeof (struct card_t));
 	}
 
-	context->cards = (card_t*) malloc (threadArgs->nCards * sizeof (card_t));
-	memcpy (context->cards, threadArgs->cards, threadArgs->nCards * sizeof (card_t));
+	context->cards = (struct card_t*) malloc (threadArgs->nCards * sizeof (struct card_t));
+	memcpy (context->cards, threadArgs->cards, threadArgs->nCards * sizeof (struct card_t));
 	context->nCards = threadArgs->nCards;
 	context->nCombinations = threadArgs->nCombinations;
 	context->nCombinationCards = threadArgs->nCombinationCards;
 	context->indexes = (int*) malloc (threadArgs->nCombinationCards * sizeof (int));
-	context->boardsPage = (board_t*) malloc (PAGE_SIZE * sizeof (board_t));
-	context->nCombinationBytes = threadArgs->nCombinationCards * sizeof (card_t);
-	context->combinationBuffer = (card_t*) malloc (threadArgs->nCombinationCards * PAGE_SIZE * sizeof (card_t));
+	context->boardsPage = (struct card_t (*)[BOARD_SIZE]) malloc (PAGE_SIZE * sizeof (struct card_t [BOARD_SIZE]));
+	context->nCombinationBytes = threadArgs->nCombinationCards * sizeof (struct card_t);
+	context->combinationBuffer = (struct card_t*) malloc (threadArgs->nCombinationCards * PAGE_SIZE * sizeof (struct card_t));
 	context->bufferOffset = context->combinationBuffer;
 	context->nCombinationsInBuffer = 0;
-	context->currentCombination = (card_t*) malloc (threadArgs->nCombinationCards * sizeof (card_t));
+	context->currentCombination = (struct card_t*) malloc (threadArgs->nCombinationCards * sizeof (struct card_t));
 	context->nPageEntries = 0;
+
+	FSM_Init (threadArgs->rules, &context->fsm);
 }
 
-void FreeThreadContext (thread_context_t* context)
+void FreeThreadContext (struct thread_context_t* context)
 {
 	free (context->boardCards);
 
@@ -525,77 +528,86 @@ void FreeThreadContext (thread_context_t* context)
 
 THREAD_FUNC_RET_TYPE ThreadFunction (void* args)
 {
-	thread_args_t* threadArgs = (thread_args_t*) args;
-	thread_context_t context;
+	struct thread_args_t* threadArgs = (struct thread_args_t*) args;
+	struct thread_context_t context;
 
 	InitializeThreadContext (&context, threadArgs);
 
-	bool done = false;
-
-	do
+	if (context.nCombinationCards == 0)
 	{
-		context.nCombinationsInBuffer = 0;
+		context.nPageEntries = 1;
+		memcpy (context.boardsPage[0], context.boardCards, sizeof (struct card_t [BOARD_SIZE]));
+		EvalPlayers (&context);
+	}
+	else
+	{
+		bool done = false;
 
 		do
 		{
-			// Prepare current combination.
-			for (int i = 0; i < context.nCombinationCards; i++)
+			context.nCombinationsInBuffer = 0;
+
+			do
 			{
-				context.currentCombination[i].rank = context.cards[context.indexes[i]].rank;
-				context.currentCombination[i].suit = context.cards[context.indexes[i]].suit;
+				// Prepare current combination.
+				for (int i = 0; i < context.nCombinationCards; i++)
+				{
+					context.currentCombination[i].rank = context.cards[context.indexes[i]].rank;
+					context.currentCombination[i].suit = context.cards[context.indexes[i]].suit;
+				}
+
+				// Copy combination to buffer.
+				memcpy (context.bufferOffset, context.currentCombination, context.nCombinationBytes);
+				// Adjust destination buffer index.
+				context.bufferOffset += context.nCombinationCards;
+				context.nCombinationsInBuffer++;
+				// Adjust combination indexes for next combination.
+				done = CMB_Next (context.indexes, context.nCombinationCards, context.nCards);
 			}
+			while (!done && context.nCombinationsInBuffer < PAGE_SIZE);
 
-			// Copy combination to buffer.
-			memcpy (context.bufferOffset, context.currentCombination, context.nCombinationBytes);
-			// Adjust destination buffer index.
-			context.bufferOffset += context.nCombinationCards;
-			context.nCombinationsInBuffer++;
-			// Adjust combination indexes for next combination.
-			done = CMB_Next (context.indexes, context.nCombinationCards, context.nCards);
-		}
-		while (!done && context.nCombinationsInBuffer < PAGE_SIZE);
+			context.nPageEntries = 0;
 
-		context.nPageEntries = 0;
-
-		if (context.nBoardCards == 0)
-		{
+			if (context.nBoardCards == 0)
+			{
 //#ifdef DEBUG
 //	D_WriteBoards ("C:\\Users\\Gabriel\\Desktop\\boards.txt", (board_t*) context.combinationBuffer, context.nCombinationsInBuffer);
 //#endif
-			EvalPlayers (&context);
-		}
-		else
-		{
-			while (context.nPageEntries < context.nCombinationsInBuffer)
-			{
-				// Generate combination.
-				for (int i = 0, j = 0; i < BOARD_SIZE; i++)
-				{
-					if (i < context.nBoardCards)
-					{
-						// Take board card if any.
-						context.boardsPage[context.nPageEntries][i].rank = context.boardCards[i].rank;
-						context.boardsPage[context.nPageEntries][i].suit = context.boardCards[i].suit;
-					}
-					else
-					{
-						// Take remaining deck card to complete combination.
-						context.boardsPage[context.nPageEntries][i].rank = context.combinationBuffer[context.nPageEntries * context.nCombinationCards + j].rank;
-						context.boardsPage[context.nPageEntries][i].suit = context.combinationBuffer[context.nPageEntries * context.nCombinationCards + j++].suit;
-					}
-				}
-
-				context.nPageEntries++;
+				EvalPlayers (&context);
 			}
+			else
+			{
+				while (context.nPageEntries < context.nCombinationsInBuffer)
+				{
+					// Generate combination.
+					for (int i = 0, j = 0; i < BOARD_SIZE; i++)
+					{
+						if (i < context.nBoardCards)
+						{
+							// Take board card if any.
+							context.boardsPage[context.nPageEntries][i].rank = context.boardCards[i].rank;
+							context.boardsPage[context.nPageEntries][i].suit = context.boardCards[i].suit;
+						}
+						else
+						{
+							// Take remaining deck card to complete combination.
+							context.boardsPage[context.nPageEntries][i].rank = context.combinationBuffer[context.nPageEntries * context.nCombinationCards + j].rank;
+							context.boardsPage[context.nPageEntries][i].suit = context.combinationBuffer[context.nPageEntries * context.nCombinationCards + j++].suit;
+						}
+					}
+
+					context.nPageEntries++;
+				}
 //#ifdef DEBUG
 //	D_WriteBoards ("C:\\Users\\Gabriel\\Desktop\\boards.txt", boardsPage, nPageEntries);
 //#endif
-			EvalPlayers (&context);
+				EvalPlayers (&context);
+			}
 		}
+		while (!done);
 	}
-	while (!done);
 
-	for (int i = 0; i < MAX_PLAYERS; i++)
+	for (int i = 0; i < context.nPlayers; i++)
 	{
 		threadArgs->results[i].wins = context.results[i].wins;
 		threadArgs->results[i].ties = context.results[i].ties;

@@ -16,31 +16,31 @@
 #define INVALID_POKER_RULES 8
 #define INTERNAL_ERROR 16
 
-typedef struct
+struct equity_t
 {
 	int wins;
 	int ties;
 	double winProbability;
 	double loseProbability;
 	double tieProbability;
-} equity_t;
+};
 
-typedef struct
+struct eval_t
 {
-	rules_t rules;                          // Poker rules used for evaluation.
+	enum rules_t rules;                     // Poker rules used for evaluation.
 	int nPlayers;                           // How many players.
 	int nBoardCards;                        // How many cards over the board.
 	int nHoleCards;                         // How many hole cards per player.
 	int nDeadCards;                         // How many dead cards.
-	card_t* boardCards;                     // Cards over the board.
-	card_t* holeCards[MAX_PLAYERS];         // Hole cards by player.
-	card_t* deadCards;                      // Dead cards.
+	struct card_t* boardCards;              // Cards over the board.
+	struct card_t* holeCards[MAX_PLAYERS];  // Hole cards by player.
+	struct card_t* deadCards;               // Dead cards.
 	int nCores;                             // How many CPUs in the system.
-	equity_t equities[MAX_PLAYERS];         // Returned equities by player.
+	struct equity_t equities[MAX_PLAYERS];  // Returned equities by player.
 	int nBoards;                            // Returned total boards evaluated.
 	int errors;                             // Returned error flags.
-} eval_t;
+};
 
-bool Eval (eval_t* evalData);
+bool Eval (struct eval_t* evalData);
 
 #endif

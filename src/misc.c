@@ -2,7 +2,7 @@
 #include <string.h>
 #include "misc.h"
 
-rank_t ToRank (char r)
+enum rank_t ToRank (char r)
 {
 	if (r == '2') return TWO;
 	if (r == '3') return THREE;
@@ -21,7 +21,7 @@ rank_t ToRank (char r)
 	return NO_RANK;
 }
 
-suit_t ToSuit (char s)
+enum suit_t ToSuit (char s)
 {
 	if (s == 'c') return CLUBS;
 	if (s == 'd') return DIAMONDS;
@@ -31,7 +31,7 @@ suit_t ToSuit (char s)
 	return NO_SUIT;
 }
 
-char ToRankString (rank_t r)
+char ToRankString (enum rank_t r)
 {
 	if (r == TWO) return '2';
 	if (r == THREE) return '3';
@@ -50,7 +50,7 @@ char ToRankString (rank_t r)
 	return '\0';
 }
 
-char ToSuitString (suit_t s)
+char ToSuitString (enum suit_t s)
 {
 	if (s == CLUBS) return 'c';
 	if (s == DIAMONDS) return 'd';
@@ -60,7 +60,7 @@ char ToSuitString (suit_t s)
 	return '\0';	
 }
 
-char* HandRankToString (hand_rank_t handRank)
+char* HandRankToString (enum hand_rank_t handRank)
 {
 	if (handRank == HIGH_CARD) return "High Card";
 	if (handRank == PAIR) return "Pair";
@@ -76,7 +76,7 @@ char* HandRankToString (hand_rank_t handRank)
 	return NULL;
 }
 
-card_t* StringToCards (char* cardsString, card_t* cards)
+struct card_t* StringToCards (char* cardsString, struct card_t* cards)
 {
 	if (cardsString == NULL)
 	{
@@ -90,8 +90,8 @@ card_t* StringToCards (char* cardsString, card_t* cards)
 		return NULL;
 	}
 
-	rank_t r;
-	suit_t s;
+	enum rank_t r;
+	enum suit_t s;
 
 	for (int i = 0, j = 0; i < length; j++)
 	{
@@ -116,7 +116,7 @@ card_t* StringToCards (char* cardsString, card_t* cards)
 	return cards;
 }
 
-char* CardToString (card_t* card, char* destination)
+char* CardToString (struct card_t* card, char* destination)
 {
 	destination[0] = ToRankString (card->rank);
 	destination[1] = ToSuitString (card->suit);

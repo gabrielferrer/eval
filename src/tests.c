@@ -17,7 +17,7 @@
 
 #define BUFFER_SIZE 10000
 
-typedef struct
+struct eq_t
 {
 	int wins;
 	int loses;
@@ -25,14 +25,14 @@ typedef struct
 	double eqWin;
 	double eqLose;
 	double eqTie;
-} eq_t;
+};
 
-hand_rank_result_t r;
+struct hand_rank_result_t r;
 
-void HandRankTest (char* boardString, hand_rank_t hr)
+void HandRankTest (char* boardString, enum hand_rank_t hr)
 {
-	board_t board;
-	hand_rank_result_t result;
+	struct card_t board[BOARD_SIZE];
+	struct hand_rank_result_t result;
 
 	if (StringToCards (boardString, board) == NULL)
 	{
@@ -47,10 +47,10 @@ void HandRankTest (char* boardString, hand_rank_t hr)
 
 void CompareTest (char* boardString1, char* boardString2, int e)
 {
-	board_t board1;
-	board_t board2;
-	hand_rank_result_t result1;
-	hand_rank_result_t result2;
+	struct card_t board1[BOARD_SIZE];
+	struct card_t board2[BOARD_SIZE];
+	struct hand_rank_result_t result1;
+	struct hand_rank_result_t result2;
 
 	if (StringToCards (boardString1, board1) == NULL)
 	{
@@ -67,14 +67,14 @@ void CompareTest (char* boardString1, char* boardString2, int e)
 	printf ("1st. board: %s. 2nd. board: %s. Expected: %d. Actual: %d\n", boardString1, boardString2, e, Compare (board1, board2));
 }
 
-void EvalTest (rules_t rules, int nPlayers, char* boardCards, char* deadCards, ...)
+void EvalTest (enum rules_t rules, int nPlayers, char* boardCards, char* deadCards, ...)
 {
 	va_list valist;
-	eval_t evalData;
-	board_t board;
-	card_t dead[DECK_SIZE];
-	card_t hole[MAX_PLAYERS * MAX_CARDS];
-	eq_t equities[MAX_PLAYERS];
+	struct eval_t evalData;
+	struct card_t board[BOARD_SIZE];
+	struct card_t dead[DECK_SIZE];
+	struct card_t hole[MAX_PLAYERS * MAX_CARDS];
+	struct eq_t equities[MAX_PLAYERS];
 	char cardBuffer[3];
 
 	evalData.rules = rules;
@@ -228,7 +228,7 @@ void ComparationTests ()
 
 // void FsmCombinationsLog ()
 // {
-	// board_t board;
+	// struct card_t board[BOARD_SIZE];
 	// card_t holeCards[4];
 
 	// StringToCards ("3h5h7sAd", hole_cards);
@@ -244,37 +244,37 @@ void ComparationTests ()
 	// }
 // }
 
-#ifdef DEBUG
-void CombinationIndexesLog ()
-{
-	card_t deck[DECK_SIZE];
+// #ifdef DEBUG
+// void CombinationIndexesLog ()
+// {
+	// card_t deck[DECK_SIZE];
 
-	for (rank_t r = TWO; r <= ACE; r++)
-	{
-		for (suit_t s = CLUBS; s <= SPADES; s++)
-		{
-			int i = INDEX (r, s);
-			deck[i].rank = r;
-			deck[i].suit = s;
-		}
-	}
+	// for (rank_t r = TWO; r <= ACE; r++)
+	// {
+		// for (suit_t s = CLUBS; s <= SPADES; s++)
+		// {
+			// int i = INDEX (r, s);
+			// deck[i].rank = r;
+			// deck[i].suit = s;
+		// }
+	// }
 
-	combination_info_t* info = E_Initialize (deck, DECK_SIZE, BOARD_SIZE, BUFFER_SIZE);
-	bool more = false;
+	// combination_info_t* info = E_Initialize (deck, DECK_SIZE, BOARD_SIZE, BUFFER_SIZE);
+	// bool more = false;
 
-	info->indexes[0] = DECK_SIZE - 29;
-	info->indexes[1] = DECK_SIZE - 25;
-	info->indexes[2] = DECK_SIZE - 19;
-	info->indexes[3] = DECK_SIZE - 11;
-	info->indexes[4] = DECK_SIZE - 10;
+	// info->indexes[0] = DECK_SIZE - 29;
+	// info->indexes[1] = DECK_SIZE - 25;
+	// info->indexes[2] = DECK_SIZE - 19;
+	// info->indexes[3] = DECK_SIZE - 11;
+	// info->indexes[4] = DECK_SIZE - 10;
 
-	do
-	{
-		more = E_Combinations (info);
-		D_WriteBoards("C:\\Users\\Gabriel\\Desktop\\combinations.txt", (board_t*) info->combination_buffer, info->combination_count);
-	} while (more);
-}
-#endif
+	// do
+	// {
+		// more = E_Combinations (info);
+		// D_WriteBoards("C:\\Users\\Gabriel\\Desktop\\combinations.txt", (scruct card_t*) info->combination_buffer, info->combination_count);
+	// } while (more);
+// }
+// #endif
 
 void EvalTests ()
 {

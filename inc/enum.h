@@ -4,7 +4,7 @@
 //#include <stdbool.h>
 //#include "poker.h"
 
-// typedef struct
+// struct combination_info_t
 // {
 	// card_t* set;                 // Set of cards to get combinations from.
 	// int setSize;                 // How many cards there are in set.
@@ -15,7 +15,7 @@
 	// int bufferSize;              // Buffer size in combinations.
 	// int nCombinations;           // How many combinations there are into buffer.
 	// card_t* currentCombination;  // Current generated combination.
-// } combination_info_t;
+// };
 
 /*
 	Initializes a structure for use in combinations generation process.

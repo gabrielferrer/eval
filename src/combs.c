@@ -11,13 +11,13 @@
 #define INDEXES 5
 #define BUFFER_SIZE 50
 
-typedef struct
+struct range_t
 {
 	long int min;
 	long int max;
-} range_t;
+};
 
-range_t ranges[INDEXES] = {	{ 0, 47 }, { 1, 48 }, { 2, 49 }, { 3, 50 }, { 4, 51 } };
+struct range_t ranges[INDEXES] = {	{ 0, 47 }, { 1, 48 }, { 2, 49 }, { 3, 50 }, { 4, 51 } };
 
 long int result[INDEXES][SET_SIZE];
 
@@ -41,6 +41,9 @@ int main (int argc, char* argv[])
 	}
 
 	// N = C(P5,5) + C(P4,4) + C(P3,3) + C(P2,2) + C(P1,1) + 1
+	// C:  combination function
+	// Pn: position of index n (starts at zero)
+	// n:  index number (starts at one)
 
 	for (int i = 0; i < INDEXES; i++)
 	{

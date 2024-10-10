@@ -21,6 +21,8 @@
 
 thread_id_t TH_CreateThread (THREAD_FUNC_PROTO, void* args);
 
-void TH_CloseThread (thread_id_t id);
+void TH_DisposeThread (thread_id_t id);
+
+void TH_WaitThreads (thread_id_t* ids, int nThreads);
 
 #endif

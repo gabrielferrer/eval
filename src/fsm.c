@@ -3,199 +3,177 @@
 #include "cmbntn.h"
 #include "fsm.h"
 
-/*
-	Fills a new board.
+#define HOLDEM_STATES 7
+#define OMAHA_STATES 2
 
-	[Returns]
-
-		True if this state returns a valid board, false if next state must be
-		called before returning a valid board.
-*/
-typedef bool (*state_t) (board_t board);
-
-int CardIndex;
-int I0[2];
-int I1[2];
-card_t HoleCards[MAX_CARDS];
-int HoleCardsCount;
-board_t BoardCards;
-state_t* States;
-int StatesCount = 0;
-int CurrentState = 0;
-bool Holdem0 (board_t board);
-bool HoldemInit1a (board_t board);
-bool Holdem1 (board_t board);
-bool InitHoldem1b (board_t board);
-bool InitHoldem2 (board_t board);
-bool Holdem2 (board_t board);
-
-bool OmahaInit (board_t board);
-bool Omaha (board_t board);
-
-state_t HoldemStates[] = { Holdem0, HoldemInit1a, Holdem1, InitHoldem1b, Holdem1, InitHoldem2, Holdem2 };
-
-state_t OmahaStates[] = { OmahaInit, Omaha };
-
-bool Holdem0 (board_t board)
+bool Holdem0 (struct card_t board[BOARD_SIZE], struct fsm_t* fsm)
 {
-	memcpy (board, BoardCards, sizeof (board_t));
-	CurrentState++;
+	memcpy (board, fsm->boardCards, sizeof (struct card_t [BOARD_SIZE]));
+	fsm->currentState++;
 	return true;
 }
 
-bool HoldemInit1a (board_t board)
+bool HoldemInit1a (struct card_t board[BOARD_SIZE], struct fsm_t* fsm)
 {
-	CardIndex = 0;
-	I0[0] = 0;
-	CurrentState++;
+	fsm->cardIndex = 0;
+	fsm->i0[0] = 0;
+	fsm->currentState++;
 	return false;
 }
 
-bool Holdem1 (board_t board)
+bool Holdem1 (struct card_t board[BOARD_SIZE], struct fsm_t* fsm)
 {
-	board[I0[0]].rank = HoleCards[CardIndex].rank;
-	board[I0[0]].suit = HoleCards[CardIndex].suit;
+	board[fsm->i0[0]].rank = fsm->holeCards[fsm->cardIndex].rank;
+	board[fsm->i0[0]].suit = fsm->holeCards[fsm->cardIndex].suit;
 
 	for (int i = 0; i < BOARD_SIZE; i++)
 	{
-		if (i == I0[0])
+		if (i == fsm->i0[0])
 		{
 			continue;
 		}
 
-		board[i].rank = BoardCards[i].rank;
-		board[i].suit = BoardCards[i].suit;
+		board[i].rank = fsm->boardCards[i].rank;
+		board[i].suit = fsm->boardCards[i].suit;
 	}
 
-	I0[0]++;
+	fsm->i0[0]++;
 
-	if (I0[0] == BOARD_SIZE)
+	if (fsm->i0[0] == BOARD_SIZE)
 	{
-		CurrentState++;
+		fsm->currentState++;
 	}
 
 	return true;
 }
 
-bool InitHoldem1b (board_t board)
+bool InitHoldem1b (struct card_t board[BOARD_SIZE], struct fsm_t* fsm)
 {
-	CardIndex = 1;
-	I0[0] = 0;
-	CurrentState++;
+	fsm->cardIndex = 1;
+	fsm->i0[0] = 0;
+	fsm->currentState++;
 	return false;
 }
 
-bool InitHoldem2 (board_t board)
+bool InitHoldem2 (struct card_t board[BOARD_SIZE], struct fsm_t* fsm)
 {
-	I0[0] = 0;
-	I0[1] = 1;
-	CurrentState++;
+	fsm->i0[0] = 0;
+	fsm->i0[1] = 1;
+	fsm->currentState++;
 	return false;
 }
 
-bool Holdem2 (board_t board)
+bool Holdem2 (struct card_t board[BOARD_SIZE], struct fsm_t* fsm)
 {
 	for (int i = 0; i < 2; i++)
 	{
-		board[I0[i]].rank = HoleCards[i].rank;
-		board[I0[i]].suit = HoleCards[i].suit;
+		board[fsm->i0[i]].rank = fsm->holeCards[i].rank;
+		board[fsm->i0[i]].suit = fsm->holeCards[i].suit;
 	}
 
 	for (int i = 0; i < BOARD_SIZE; i++)
 	{
-		if (i == I0[0] || i == I0[1])
+		if (i == fsm->i0[0] || i == fsm->i0[1])
 		{
 			continue;
 		}
 
-		board[i].rank = BoardCards[i].rank;
-		board[i].suit = BoardCards[i].suit;
+		board[i].rank = fsm->boardCards[i].rank;
+		board[i].suit = fsm->boardCards[i].suit;
 	}
 
-	if (CMB_Next (I0, 2, BOARD_SIZE))
+	if (CMB_Next (fsm->i0, 2, BOARD_SIZE))
 	{
-		CurrentState++;
+		fsm->currentState++;
 	}
 
 	return true;
 }
 
-bool OmahaInit (board_t board)
+bool OmahaInit (struct card_t board[BOARD_SIZE], struct fsm_t* fsm)
 {
-	I0[0] = 0;
-	I0[1] = 1;
-	I1[0] = 0;
-	I1[1] = 1;
-	CurrentState++;
+	fsm->i0[0] = 0;
+	fsm->i0[1] = 1;
+	fsm->i1[0] = 0;
+	fsm->i1[1] = 1;
+	fsm->currentState++;
 	return false;
 }
 
-bool Omaha (board_t board)
+bool Omaha (struct card_t board[BOARD_SIZE], struct fsm_t* fsm)
 {
 	for (int i = 0; i < 2; i++)
 	{
-		board[I1[i]].rank = HoleCards[I0[i]].rank;
-		board[I1[i]].suit = HoleCards[I0[i]].suit;
+		board[fsm->i1[i]].rank = fsm->holeCards[fsm->i0[i]].rank;
+		board[fsm->i1[i]].suit = fsm->holeCards[fsm->i0[i]].suit;
 	}
 
 	for (int i = 0; i < BOARD_SIZE; i++)
 	{
-		if (i == I1[0] || i == I1[1])
+		if (i == fsm->i1[0] || i == fsm->i1[1])
 		{
 			continue;
 		}
 
-		board[i].rank = BoardCards[i].rank;
-		board[i].suit = BoardCards[i].suit;
+		board[i].rank = fsm->boardCards[i].rank;
+		board[i].suit = fsm->boardCards[i].suit;
 	}
 
-	if (CMB_Next (I1, 2, BOARD_SIZE))
+	if (CMB_Next (fsm->i1, 2, BOARD_SIZE))
 	{
-		if (CMB_Next (I0, 2, HoleCardsCount))
+		if (CMB_Next (fsm->i0, 2, fsm->nHoleCards))
 		{
-			CurrentState++;
+			fsm->currentState++;
 		}		
 		else
 		{
-			I1[0] = 0;
-			I1[1] = 1;
+			fsm->i1[0] = 0;
+			fsm->i1[1] = 1;
 		}
 	}
 
 	return true;
 }
 
-void FSM_ResetRules (rules_t rules)
+void FSM_Init (enum rules_t rules, struct fsm_t* fsm)
 {
 	if (rules == HOLDEM)
 	{
-		States = HoldemStates;
-		StatesCount = sizeof (HoldemStates) / sizeof (state_t);
-	} else
+		fsm->states[0] = Holdem0;
+		fsm->states[1] = HoldemInit1a;
+		fsm->states[2] = Holdem1;
+		fsm->states[3] = InitHoldem1b;
+		fsm->states[4] = Holdem1;
+		fsm->states[5] = InitHoldem2;
+		fsm->states[6] = Holdem2;
+		fsm->nStates = HOLDEM_STATES;
+	}
+	else
 	{
-		States = OmahaStates;
-		StatesCount = sizeof (OmahaStates) / sizeof (state_t);
+		fsm->states[0] = OmahaInit;
+		fsm->states[1] = Omaha;
+		fsm->nStates = OMAHA_STATES;
 	}
 
-	CurrentState = 0;
+	fsm->currentState = 0;
 }
 
-void FSM_ResetHoleCards (card_t* holeCards, int nHoleCards)
+void FSM_ResetHoleCards (struct card_t* holeCards, int nHoleCards, struct fsm_t* fsm)
 {
-	memcpy (HoleCards, holeCards, nHoleCards * sizeof (card_t));
-	HoleCardsCount = nHoleCards;
-	CurrentState = 0;
+	memcpy (fsm->holeCards, holeCards, nHoleCards * sizeof (struct card_t));
+	fsm->nHoleCards = nHoleCards;
+	fsm->currentState = 0;
 }
 
-void FSM_ResetBoardCards (board_t boardCards)
+void FSM_ResetBoardCards (struct card_t boardCards[BOARD_SIZE], struct fsm_t* fsm)
 {
-	memcpy (BoardCards, boardCards, sizeof (board_t));
-	CurrentState = 0;
+	memcpy (fsm->boardCards, boardCards, sizeof (struct card_t [BOARD_SIZE]));
+	fsm->currentState = 0;
 }
 
-bool FSM_Next (board_t board)
+bool FSM_Next (struct card_t board[BOARD_SIZE], struct fsm_t* fsm)
 {
-	if (CurrentState < 0 || CurrentState >= StatesCount)
+	if (fsm->currentState < 0 || fsm->currentState >= fsm->nStates)
 	{
 		return false;
 	}
@@ -204,9 +182,9 @@ bool FSM_Next (board_t board)
 
 	do
 	{
-		done = States[CurrentState] (board);
+		done = fsm->states[fsm->currentState] (board, fsm);
 	}
-	while (!done && CurrentState < StatesCount);
+	while (!done && fsm->currentState < fsm->nStates);
 
 	return true;
 }

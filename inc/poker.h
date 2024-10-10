@@ -6,16 +6,14 @@
 #define MAX_PLAYERS 10
 #define MAX_CARDS 6
 
-typedef enum { HOLDEM, OMAHA, OMAHA5, OMAHA6 } rules_t;
+enum rules_t { HOLDEM, OMAHA, OMAHA5, OMAHA6 };
 
-typedef enum { NO_SUIT, CLUBS, DIAMONDS, HEARTS, SPADES } suit_t;
+enum suit_t { NO_SUIT, CLUBS, DIAMONDS, HEARTS, SPADES };
 
-typedef enum { NO_RANK, ONE, TWO, THREE, FOUR, FIVE, SIX, SEVEN, EIGHT, NINE, TEN, JACK, QUEEN, KING, ACE } rank_t;
+enum rank_t { NO_RANK, ONE, TWO, THREE, FOUR, FIVE, SIX, SEVEN, EIGHT, NINE, TEN, JACK, QUEEN, KING, ACE };
 
-typedef enum { HIGH_CARD = 1, PAIR, TWO_PAIR, THREE_OF_A_KIND, STRAIGHT, FLUSH, FULL_HOUSE, FOUR_OF_A_KIND, STRAIGHT_FLUSH, ROYAL_FLUSH } hand_rank_t;
+enum hand_rank_t { HIGH_CARD = 1, PAIR, TWO_PAIR, THREE_OF_A_KIND, STRAIGHT, FLUSH, FULL_HOUSE, FOUR_OF_A_KIND, STRAIGHT_FLUSH, ROYAL_FLUSH };
 
-typedef struct { rank_t rank; suit_t suit; } card_t;
-
-typedef card_t board_t[BOARD_SIZE];
+struct card_t { enum rank_t rank; enum suit_t suit; };
 
 #endif

@@ -4,18 +4,18 @@
 #include <stdbool.h>
 #include "poker.h"
 
-rank_t ToRank (char r);
+enum rank_t ToRank (char r);
 
-suit_t ToSuit (char s);
+enum suit_t ToSuit (char s);
 
-char ToRankString (rank_t r);
+char ToRankString (enum rank_t r);
 
-char ToSuitString (suit_t s);
+char ToSuitString (enum suit_t s);
 
-char* HandRankToString (hand_rank_t handRank);
+char* HandRankToString (enum hand_rank_t handRank);
 
-card_t* StringToCards (char* cardsString, card_t* cards);
+struct card_t* StringToCards (char* cardsString, struct card_t* cards);
 
-char* CardToString (card_t* card, char* destination);
+char* CardToString (struct card_t* card, char* destination);
 
 #endif
