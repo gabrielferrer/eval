@@ -484,8 +484,13 @@ void InitializeThreadContext (struct thread_context_t* context, struct thread_ar
 	context->nPlayers = threadArgs->nPlayers;
 	context->nBoardCards = threadArgs->nBoardCards;
 	context->nHoleCards = threadArgs->nHoleCards;
-	context->boardCards = (struct card_t*) malloc (threadArgs->nBoardCards * sizeof (struct card_t));
-	memcpy (context->boardCards, threadArgs->boardCards, threadArgs->nBoardCards * sizeof (struct card_t));
+	context->boardCards = NULL;
+
+	if (threadArgs->boardCards != NULL)
+	{
+		context->boardCards = (struct card_t*) malloc (threadArgs->nBoardCards * sizeof (struct card_t));
+		memcpy (context->boardCards, threadArgs->boardCards, threadArgs->nBoardCards * sizeof (struct card_t));
+	}
 
 	for (int i = 0; i < threadArgs->nPlayers; i++)
 	{
@@ -495,35 +500,50 @@ void InitializeThreadContext (struct thread_context_t* context, struct thread_ar
 
 	context->cards = (struct card_t*) malloc (threadArgs->nCards * sizeof (struct card_t));
 	memcpy (context->cards, threadArgs->cards, threadArgs->nCards * sizeof (struct card_t));
+
 	context->nCards = threadArgs->nCards;
 	context->nCombinations = threadArgs->nCombinations;
 	context->nCombinationCards = threadArgs->nCombinationCards;
-	context->indexes = (int*) malloc (threadArgs->nCombinationCards * sizeof (int));
-	context->boardsPage = (struct card_t (*)[BOARD_SIZE]) malloc (PAGE_SIZE * sizeof (struct card_t [BOARD_SIZE]));
-	context->nCombinationBytes = threadArgs->nCombinationCards * sizeof (struct card_t);
-	context->combinationBuffer = (struct card_t*) malloc (threadArgs->nCombinationCards * PAGE_SIZE * sizeof (struct card_t));
+	context->indexes = NULL;
+
+	if (threadArgs->indexes != NULL)
+	{
+		context->indexes = (int*) malloc (threadArgs->nCombinationCards * sizeof (int));
+		memcpy (context->indexes, threadArgs->indexes, threadArgs->nCombinationCards * sizeof (int));
+	}
+
+	context->boardsPage = (struct card_t (*)[BOARD_SIZE]) malloc ((threadArgs->nCombinationCards == 0 ? 1 : PAGE_SIZE) * sizeof (struct card_t [BOARD_SIZE]));
+	context->nCombinationBytes = (threadArgs->nCombinationCards == 0 ? threadArgs->nCards : threadArgs->nCombinationCards) * sizeof (struct card_t);
+	context->combinationBuffer = (struct card_t*) malloc ((threadArgs->nCombinationCards == 0 ? threadArgs->nCards : threadArgs->nCombinationCards * PAGE_SIZE) * sizeof (struct card_t));
 	context->bufferOffset = context->combinationBuffer;
 	context->nCombinationsInBuffer = 0;
-	context->currentCombination = (struct card_t*) malloc (threadArgs->nCombinationCards * sizeof (struct card_t));
+	context->currentCombination = threadArgs->nCombinationCards == 0 ? NULL : (struct card_t*) malloc (threadArgs->nCombinationCards * sizeof (struct card_t));
 	context->nPageEntries = 0;
+
+	for (int i = 0; i < MAX_PLAYERS; i++)
+	{
+		context->results[i].wins = 0;
+		context->results[i].ties = 0;
+	}
 
 	FSM_Init (threadArgs->rules, &context->fsm);
 }
 
 void FreeThreadContext (struct thread_context_t* context)
 {
-	free (context->boardCards);
+	if (context->boardCards) free (context->boardCards);
 
-	for (int i = 0; i < MAX_PLAYERS; i++)
-	{
-		free (context->holeCards[i]);
-	}
+	for (int i = 0; i < context->nPlayers; i++) free (context->holeCards[i]);
 
-	free (context->cards);
-	free (context->indexes);
-	free (context->boardsPage);
-	free (context->combinationBuffer);
-	free (context->currentCombination);
+	if (context->cards) free (context->cards);
+	
+	if (context->indexes) free (context->indexes);
+
+	if (context->boardsPage) free (context->boardsPage);
+
+	if (context->combinationBuffer) free (context->combinationBuffer);
+
+	if (context->currentCombination) free (context->currentCombination);
 }
 
 THREAD_FUNC_RET_TYPE ThreadFunction (void* args)
@@ -607,10 +627,10 @@ THREAD_FUNC_RET_TYPE ThreadFunction (void* args)
 		while (!done);
 	}
 
-	for (int i = 0; i < context.nPlayers; i++)
+	for (int i = 0; i < MAX_PLAYERS; i++)
 	{
-		threadArgs->results[i].wins = context.results[i].wins;
-		threadArgs->results[i].ties = context.results[i].ties;
+		threadArgs->results[i].wins = i < context.nPlayers ? context.results[i].wins : 0;
+		threadArgs->results[i].ties = i < context.nPlayers ? context.results[i].ties : 0;
 	}
 
 	FreeThreadContext (&context);
