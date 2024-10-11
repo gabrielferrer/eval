@@ -71,16 +71,13 @@ void EvalTest (enum rules_t rules, int nPlayers, char* boardCards, char* deadCar
 {
 	va_list valist;
 	struct eval_t evalData;
-	struct card_t board[BOARD_SIZE];
-	struct card_t dead[DECK_SIZE];
-	struct card_t hole[MAX_PLAYERS * MAX_CARDS];
 	struct eq_t equities[MAX_PLAYERS];
 	char cardBuffer[3];
 
 	evalData.rules = rules;
 	evalData.nPlayers = nPlayers;
-	evalData.boardCards = StringToCards (boardCards, board);
-	evalData.deadCards = StringToCards (deadCards, dead);
+	StringToCards (boardCards, evalData.boardCards);
+	StringToCards (deadCards, evalData.deadCards);
 
 	evalData.nBoardCards = boardCards != NULL ? strlen (boardCards) / 2 : 0;
 	evalData.nDeadCards = deadCards != NULL ? strlen (deadCards) / 2 : 0;
@@ -92,7 +89,6 @@ void EvalTest (enum rules_t rules, int nPlayers, char* boardCards, char* deadCar
 	for (int i = 0; i < nPlayers; i++)
 	{
 		char* holeCards = va_arg (valist, char*);
-		evalData.holeCards[i] = &hole[i * MAX_CARDS];
 		StringToCards (holeCards, evalData.holeCards[i]);
 
 		if (holeCards != NULL && evalData.nHoleCards == 0)

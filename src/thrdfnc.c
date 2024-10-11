@@ -15,24 +15,24 @@ struct player_info_t
 
 struct thread_context_t
 {
-	enum rules_t rules;
 	int nPlayers;
 	int nBoardCards;
 	int nHoleCards;
-	struct card_t* boardCards;
-	struct card_t* holeCards[MAX_PLAYERS];
-	struct card_t* cards;
 	int nCards;
 	int nCombinations;
 	int nCombinationCards;
-	int* indexes;
-	struct card_t (*boardsPage)[BOARD_SIZE];
 	int nCombinationBytes;
+	int nCombinationsInBuffer;
+	int nPageEntries;
+	enum rules_t rules;
+	struct card_t boardCards[BOARD_SIZE];
+	struct card_t holeCards[MAX_PLAYERS][MAX_CARDS];
+	struct card_t cards[DECK_SIZE];
+	int indexes[BOARD_SIZE];
+	struct card_t (*boardsPage)[BOARD_SIZE];
 	struct card_t* combinationBuffer;
 	struct card_t* bufferOffset;
-	int nCombinationsInBuffer;
 	struct card_t* currentCombination;
-	int nPageEntries;
 	struct fsm_t fsm;
 	struct thread_result_t results[MAX_PLAYERS];
 	struct player_info_t playerInfo[MAX_PLAYERS];
@@ -484,41 +484,27 @@ void InitializeThreadContext (struct thread_context_t* context, struct thread_ar
 	context->nPlayers = threadArgs->nPlayers;
 	context->nBoardCards = threadArgs->nBoardCards;
 	context->nHoleCards = threadArgs->nHoleCards;
-	context->boardCards = NULL;
-
-	if (threadArgs->boardCards != NULL)
-	{
-		context->boardCards = (struct card_t*) malloc (threadArgs->nBoardCards * sizeof (struct card_t));
-		memcpy (context->boardCards, threadArgs->boardCards, threadArgs->nBoardCards * sizeof (struct card_t));
-	}
-
-	for (int i = 0; i < threadArgs->nPlayers; i++)
-	{
-		context->holeCards[i] = (struct card_t*) malloc (threadArgs->nHoleCards * sizeof (struct card_t));
-		memcpy (context->holeCards[i], threadArgs->holeCards[i], threadArgs->nHoleCards * sizeof (struct card_t));
-	}
-
-	context->cards = (struct card_t*) malloc (threadArgs->nCards * sizeof (struct card_t));
-	memcpy (context->cards, threadArgs->cards, threadArgs->nCards * sizeof (struct card_t));
-
 	context->nCards = threadArgs->nCards;
 	context->nCombinations = threadArgs->nCombinations;
 	context->nCombinationCards = threadArgs->nCombinationCards;
-	context->indexes = NULL;
+	context->nCombinationBytes = (threadArgs->nCombinationCards == 0 ? threadArgs->nCards : threadArgs->nCombinationCards) * sizeof (struct card_t);
+	context->nCombinationsInBuffer = 0;
+	context->nPageEntries = 0;
 
-	if (threadArgs->indexes != NULL)
+	memcpy (context->boardCards, threadArgs->boardCards, threadArgs->nBoardCards * sizeof (struct card_t));
+
+	for (int i = 0; i < threadArgs->nPlayers; i++)
 	{
-		context->indexes = (int*) malloc (threadArgs->nCombinationCards * sizeof (int));
-		memcpy (context->indexes, threadArgs->indexes, threadArgs->nCombinationCards * sizeof (int));
+		memcpy (context->holeCards[i], threadArgs->holeCards[i], threadArgs->nHoleCards * sizeof (struct card_t));
 	}
 
+	memcpy (context->cards, threadArgs->cards, threadArgs->nCards * sizeof (struct card_t));
+	memcpy (context->indexes, threadArgs->indexes, threadArgs->nCombinationCards * sizeof (int));
+
 	context->boardsPage = (struct card_t (*)[BOARD_SIZE]) malloc ((threadArgs->nCombinationCards == 0 ? 1 : PAGE_SIZE) * sizeof (struct card_t [BOARD_SIZE]));
-	context->nCombinationBytes = (threadArgs->nCombinationCards == 0 ? threadArgs->nCards : threadArgs->nCombinationCards) * sizeof (struct card_t);
 	context->combinationBuffer = (struct card_t*) malloc ((threadArgs->nCombinationCards == 0 ? threadArgs->nCards : threadArgs->nCombinationCards * PAGE_SIZE) * sizeof (struct card_t));
 	context->bufferOffset = context->combinationBuffer;
-	context->nCombinationsInBuffer = 0;
 	context->currentCombination = threadArgs->nCombinationCards == 0 ? NULL : (struct card_t*) malloc (threadArgs->nCombinationCards * sizeof (struct card_t));
-	context->nPageEntries = 0;
 
 	for (int i = 0; i < MAX_PLAYERS; i++)
 	{
@@ -531,14 +517,6 @@ void InitializeThreadContext (struct thread_context_t* context, struct thread_ar
 
 void FreeThreadContext (struct thread_context_t* context)
 {
-	if (context->boardCards) free (context->boardCards);
-
-	for (int i = 0; i < context->nPlayers; i++) free (context->holeCards[i]);
-
-	if (context->cards) free (context->cards);
-	
-	if (context->indexes) free (context->indexes);
-
 	if (context->boardsPage) free (context->boardsPage);
 
 	if (context->combinationBuffer) free (context->combinationBuffer);

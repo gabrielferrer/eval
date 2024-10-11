@@ -78,7 +78,7 @@ void InitialzeIndexes (int* indexes, int nIndexes, int nCombinations, int nCards
 {
 	int minIndex = 0;
 	int maxIndex = nCards - nIndexes;
-	struct range_t* ranges = (struct range_t*) malloc (nIndexes * sizeof (struct range_t));
+	struct range_t[BOARD_SIZE] ranges;
 
 	for (int i = 0; i < nIndexes; i++, minIndex++, maxIndex++)
 	{
@@ -108,8 +108,6 @@ void InitialzeIndexes (int* indexes, int nIndexes, int nCombinations, int nCards
 		indexes[i] = pivot;
 		nCombinations -= contributions[i][pivot];
 	}
-
-	if (ranges) free (ranges);
 }
 
 void FreeThreadInfo (thread_id_t* threadIds, struct thread_args_t* threadArgs, int nThreads, int nPlayers)
@@ -118,16 +116,7 @@ void FreeThreadInfo (thread_id_t* threadIds, struct thread_args_t* threadArgs, i
 	{
 		for (int i = 0; i < nThreads; i++)
 		{
-			if (threadArgs[i].boardCards) free (threadArgs[i].boardCards);
-
-			for (int j = 0; j < nPlayers; j++)
-			{
-				if (threadArgs[i].holeCards[j]) free (threadArgs[i].holeCards[j]);
-			}
-
 			if (threadArgs[i].cards) free (threadArgs[i].cards);
-
-			if (threadArgs[i].indexes) free (threadArgs[i].indexes);
 		}
 
 		free (threadArgs);
@@ -278,21 +267,19 @@ bool Eval (struct eval_t* evalData)
 		threadArgs[0].nPlayers = evalData->nPlayers;
 		threadArgs[0].nBoardCards = evalData->nBoardCards;
 		threadArgs[0].nHoleCards = evalData->nHoleCards;
-		threadArgs[0].boardCards = (struct card_t*) malloc (evalData->nBoardCards * sizeof (struct card_t));
+
 		memcpy (threadArgs[0].boardCards, evalData->boardCards, evalData->nBoardCards * sizeof (struct card_t));
 
 		for (int j = 0; j < evalData->nPlayers; j++)
 		{
-			threadArgs[0].holeCards[j] = (struct card_t*) malloc (evalData->nHoleCards * sizeof (struct card_t));
 			memcpy (threadArgs[0].holeCards[j], evalData->holeCards[j], evalData->nHoleCards * sizeof (struct card_t));
 		}
 
-		threadArgs[0].cards = (struct card_t*) malloc (nCards * sizeof (struct card_t));
 		memcpy (threadArgs[0].cards, deck, nCards * sizeof (struct card_t));
+
 		threadArgs[0].nCards = nCards;
 		threadArgs[0].nCombinations = 0;
 		threadArgs[0].nCombinationCards = combinationSize;
-		threadArgs[0].indexes = NULL;
 
 		threadIds[0] = TH_CreateThread (ThreadFunction, threadArgs);
 
@@ -319,21 +306,19 @@ bool Eval (struct eval_t* evalData)
 			threadArgs[i].nPlayers = evalData->nPlayers;
 			threadArgs[i].nBoardCards = evalData->nBoardCards;
 			threadArgs[i].nHoleCards = evalData->nHoleCards;
-			threadArgs[i].boardCards = (struct card_t*) malloc (evalData->nBoardCards * sizeof (struct card_t));
+
 			memcpy (threadArgs[i].boardCards, evalData->boardCards, evalData->nBoardCards * sizeof (struct card_t));
 
 			for (int j = 0; j < evalData->nPlayers; j++)
 			{
-				threadArgs[i].holeCards[j] = (struct card_t*) malloc (evalData->nHoleCards * sizeof (struct card_t));
 				memcpy (threadArgs[i].holeCards[j], evalData->holeCards[j], evalData->nHoleCards * sizeof (struct card_t));
 			}
 
-			threadArgs[i].cards = (struct card_t*) malloc (nCards * sizeof (struct card_t));
 			memcpy (threadArgs[i].cards, deck, nCards * sizeof (struct card_t));
+
 			threadArgs[i].nCards = nCards;
 			threadArgs[i].nCombinations = combinationsPerThread + i < reminder ? 1 : 0;
 			threadArgs[i].nCombinationCards = combinationSize;
-			threadArgs[i].indexes = (int*) malloc (combinationSize * sizeof (int));
 
 			InitialzeIndexes (threadArgs[i].indexes, combinationSize, nCombinations, nCards);
 

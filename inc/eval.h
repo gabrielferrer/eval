@@ -27,18 +27,18 @@ struct equity_t
 
 struct eval_t
 {
-	enum rules_t rules;                     // Poker rules used for evaluation.
-	int nPlayers;                           // How many players.
-	int nBoardCards;                        // How many cards over the board.
-	int nHoleCards;                         // How many hole cards per player.
-	int nDeadCards;                         // How many dead cards.
-	struct card_t* boardCards;              // Cards over the board.
-	struct card_t* holeCards[MAX_PLAYERS];  // Hole cards by player.
-	struct card_t* deadCards;               // Dead cards.
-	int nCores;                             // How many CPUs in the system.
-	struct equity_t equities[MAX_PLAYERS];  // Returned equities by player.
-	int nBoards;                            // Returned total boards evaluated.
-	int errors;                             // Returned error flags.
+	int nPlayers;                                    // How many players.
+	int nBoardCards;                                 // How many cards over the board.
+	int nHoleCards;                                  // How many hole cards per player.
+	int nDeadCards;                                  // How many dead cards.
+	int nCores;                                      // How many CPUs in the system.
+	int nBoards;                                     // Returned total boards evaluated.
+	enum rules_t rules;                              // Poker rules used for evaluation.
+	struct card_t boardCards[BOARD_SIZE];            // Cards over the board.
+	struct card_t holeCards[MAX_PLAYERS][MAX_CARDS]; // Hole cards by player.
+	struct card_t deadCards[DECK_SIZE];              // Dead cards.
+	struct equity_t equities[MAX_PLAYERS];           // Returned equities by player.
+	int errors;                                      // Returned error flags.
 };
 
 bool Eval (struct eval_t* evalData);

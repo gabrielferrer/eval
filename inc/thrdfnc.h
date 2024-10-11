@@ -32,18 +32,18 @@ struct thread_result_t
 
 struct thread_args_t
 {
-	enum rules_t rules;                          // Poker rules used for evaluation.
-	int nPlayers;                                // How many players.
-	int nBoardCards;                             // How many cards over the board.
-	int nHoleCards;                              // How many hole cards per player.
-	struct card_t* boardCards;                   // Cards over the board.
-	struct card_t* holeCards[MAX_PLAYERS];       // Hole cards by player.
-	struct card_t* cards;                        // Cards left on deck.
-	int nCards;                                  // How many cards there are into deck.
-	int nCombinations;                           // How many combinations a thread must process.
-	int nCombinationCards;                       // How many cards per combination.
-	int* indexes;                                // Initialized indexes to cards. Used to build combinations.
-	struct thread_result_t results[MAX_PLAYERS]; // Results of calculations done by thread.
+	int nPlayers;                                    // How many players.
+	int nBoardCards;                                 // How many cards over the board.
+	int nHoleCards;                                  // How many hole cards per player.
+	int nCards;                                      // How many cards there are into deck.
+	int nCombinations;                               // How many combinations a thread must process.
+	int nCombinationCards;                           // How many cards per combination.
+	enum rules_t rules;                              // Poker rules used for evaluation.
+	struct card_t boardCards[BOARD_SIZE];            // Cards over the board.
+	struct card_t holeCards[MAX_PLAYERS][MAX_CARDS]; // Hole cards by player.
+	struct card_t cards[DECK_SIZE];                  // Cards left on deck.
+	int indexes[BOARD_SIZE];                         // Initialized indexes to cards. Used to build combinations.
+	struct thread_result_t results[MAX_PLAYERS];     // Results of calculations done by thread.
 };
 
 void HandRank (struct card_t board[BOARD_SIZE], struct hand_rank_result_t* result);
