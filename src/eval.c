@@ -88,21 +88,29 @@ void InitialzeIndexes (int* indexes, int nIndexes, int nCombinations, int nCards
 
 	for (int i = nIndexes - 1; i >= 0; i--)
 	{
-		int pivot = (ranges[i].min + ranges[i].max) / 2;
+		int pivot;
 
-		while (pivot > ranges[i].min && pivot < ranges[i].max
-			&& !(nCombinations - contributions[i][pivot] >= 1 && nCombinations - contributions[i][pivot + 1] <= 0))
+		while (ranges[i].min <= ranges[i].max)
 		{
-			if (nCombinations - contributions[i][pivot] > 0)
+			pivot = (ranges[i].min + ranges[i].max) / 2;
+
+			if (nCombinations - contributions[i][pivot] > 1)
 			{
 				ranges[i].min = pivot + 1;
 			}
-			else if (nCombinations - contributions[i][pivot] <= 0)
+			else if (nCombinations - contributions[i][pivot] < 1)
 			{
 				ranges[i].max = pivot - 1;
 			}
+			else
+			{
+				break;
+			}
+		}
 
-			pivot = (ranges[i].min + ranges[i].max) / 2;
+		if (nCombinations - contributions[i][pivot] < 0)
+		{
+			--pivot;
 		}
 
 		indexes[i] = pivot;
