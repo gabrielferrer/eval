@@ -41,6 +41,10 @@ struct eval_t
 	int errors;                                      // Returned error flags.
 };
 
+#ifdef DEBUG
+void InitialzeIndexes (int* indexes, int nIndexes, int nCombinations, int nCards);
+#endif
+
 bool Eval (struct eval_t* evalData);
 
 #endif

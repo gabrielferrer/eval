@@ -27,8 +27,6 @@ struct eq_t
 	double eqTie;
 };
 
-struct hand_rank_result_t r;
-
 void HandRankTest (char* boardString, enum hand_rank_t hr)
 {
 	struct card_t board[BOARD_SIZE];
@@ -222,6 +220,37 @@ void ComparationTests ()
 	CompareTest ("KhJhQhThAh", "JcQcTcAcKc", 0);
 }
 
+void IndexInitializationTest (int* indexes, int nIndexes, int nCombinations, int nCards, ...)
+{
+	va_list valist;
+	int expected[BOARD_SIZE];
+
+	InitialzeIndexes (indexes, nIndexes, nCombinations, nCards);
+
+	va_start (valist, nCards);
+
+	for (int i = nIndexes - 1; i >= 0; i--)
+	{
+		expected[i] = va_arg (valist, int);
+	}
+
+	va_end (valist);
+
+	printf ("Expected: %d-%d-%d-%d-%d. Actual: %d-%d-%d-%d-%d\n",
+		expected[4], expected[3], expected[2], expected[1], expected[0], indexes[4], indexes[3], indexes[2], indexes[1], indexes[0]);
+}
+
+void IndexInitializationTests ()
+{
+	int indexes[BOARD_SIZE];
+
+	IndexInitializationTest (indexes, 5, 2598960, 52, 51, 50, 49, 48, 47);
+	IndexInitializationTest (indexes, 5, 1, 52, 4, 3, 2, 1, 0 );
+	IndexInitializationTest (indexes, 5, 1299480, 52, 45, 38, 29, 22, 20);
+	IndexInitializationTest (indexes, 5, 649740, 52, 39, 38, 11, 2, 1);
+	IndexInitializationTest (indexes, 5, 1949220, 52, 49, 33, 21, 13, 7);
+}
+
 // void FsmCombinationsLog ()
 // {
 	// struct card_t board[BOARD_SIZE];
@@ -274,14 +303,14 @@ void ComparationTests ()
 
 void EvalTests ()
 {
-	//EvalTest (HOLDEM, 2, "KsAc2s3c7d", NULL, "3h5h", "Ts2c", 1, 0, 0, 100.0d, 0.0d, 0.0d, 0, 1, 0, 0.0d, 100.0d, 0.0d);
+	EvalTest (HOLDEM, 2, "KsAc2s3c7d", NULL, "3h5h", "Ts2c", 1, 0, 0, 100.0d, 0.0d, 0.0d, 0, 1, 0, 0.0d, 100.0d, 0.0d);
 	EvalTest (HOLDEM, 2, "KsAc2s3c", NULL, "3h5h", "Ts2c", 39, 5, 0, 88.64d, 11.36d, 0.0d, 5, 39, 0, 11.36d, 88.64d, 0.0d);
-	//EvalTest (HOLDEM, 2, "KsAc2s", NULL, "3h5h", "Ts2c", 341, 649, 0, 34.44d, 65.56d, 0.0d, 649, 341, 0, 65.56d, 34.44d, 0.0d);
-	//EvalTest (HOLDEM, 2, NULL, NULL, "3h5h", "Ts2c", 788648, 889063, 34593, 46.06d, 51.92d, 2.02d, 889063, 788648, 34593, 51.92d, 46.06d, 2.02d);
-	//EvalTest (OMAHA, 2, "KsAc2s3c7d", NULL, "3h5h7sAd", "Ts2c8cKc", 1, 0, 0, 100.0d, 0.0d, 0.0d, 0, 1, 0, 0.0d, 100.0d, 0.0d);
-	//EvalTest (OMAHA, 2, "KsAc2s3c", NULL, "3h5h7sAd", "Ts2c8cKc", 28, 12, 0, 70.0d, 30.0d, 0.0d, 12, 28, 0, 30.0d, 70.0d, 0.0d);
-	//EvalTest (OMAHA, 2, "KsAc2s", NULL, "3h5h7sAd", "Ts2c8cKc", 433, 387, 0, 52.80d, 47.20d, 0.0d, 387, 433, 0, 47.20d, 52.80d, 0.0d);
-	//EvalTest (OMAHA, 2, NULL, NULL, "3h5h7sAd", "Ts2c8cKc", 261195, 238805, 0, 52.24d, 47.76d, 0.0d, 238805, 261195, 0, 47.76d, 52.24d, 0.0d);
+	EvalTest (HOLDEM, 2, "KsAc2s", NULL, "3h5h", "Ts2c", 341, 649, 0, 34.44d, 65.56d, 0.0d, 649, 341, 0, 65.56d, 34.44d, 0.0d);
+	EvalTest (HOLDEM, 2, NULL, NULL, "3h5h", "Ts2c", 788648, 889063, 34593, 46.06d, 51.92d, 2.02d, 889063, 788648, 34593, 51.92d, 46.06d, 2.02d);
+	EvalTest (OMAHA, 2, "KsAc2s3c7d", NULL, "3h5h7sAd", "Ts2c8cKc", 1, 0, 0, 100.0d, 0.0d, 0.0d, 0, 1, 0, 0.0d, 100.0d, 0.0d);
+	EvalTest (OMAHA, 2, "KsAc2s3c", NULL, "3h5h7sAd", "Ts2c8cKc", 28, 12, 0, 70.0d, 30.0d, 0.0d, 12, 28, 0, 30.0d, 70.0d, 0.0d);
+	EvalTest (OMAHA, 2, "KsAc2s", NULL, "3h5h7sAd", "Ts2c8cKc", 433, 387, 0, 52.80d, 47.20d, 0.0d, 387, 433, 0, 47.20d, 52.80d, 0.0d);
+	EvalTest (OMAHA, 2, NULL, NULL, "3h5h7sAd", "Ts2c8cKc", 261195, 238805, 0, 52.24d, 47.76d, 0.0d, 238805, 261195, 0, 47.76d, 52.24d, 0.0d);
 #ifdef DEBUG
 	// FsmCombinationsLog ();
 	// CombinationIndexesLog ();
@@ -290,8 +319,9 @@ void EvalTests ()
 
 int main ()
 {
+	IndexInitializationTests ();
 	//RankTests ();
 	//ComparationTests ();
 	//CombinationTests ();
-	EvalTests ();
+	//EvalTests ();
 }

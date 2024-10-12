@@ -78,7 +78,7 @@ void InitialzeIndexes (int* indexes, int nIndexes, int nCombinations, int nCards
 {
 	int minIndex = 0;
 	int maxIndex = nCards - nIndexes;
-	struct range_t[BOARD_SIZE] ranges;
+	struct range_t ranges[BOARD_SIZE];
 
 	for (int i = 0; i < nIndexes; i++, minIndex++, maxIndex++)
 	{
@@ -86,23 +86,23 @@ void InitialzeIndexes (int* indexes, int nIndexes, int nCombinations, int nCards
 		ranges[i].max = maxIndex;
 	}
 
-	for (int i = 0; i < nIndexes; i++)
+	for (int i = nIndexes - 1; i >= 0; i--)
 	{
-		int pivot = (ranges[i].max - ranges[i].min) / 2;
-		int nextPivot = pivot + 1;
+		int pivot = (ranges[i].min + ranges[i].max) / 2;
 
-		while (pivot < ranges[i].max && !(contributions[i][pivot] > 0 && contributions[i][nextPivot] < 0))
+		while (pivot > ranges[i].min && pivot < ranges[i].max
+			&& !(nCombinations - contributions[i][pivot] >= 1 && nCombinations - contributions[i][pivot + 1] <= 0))
 		{
 			if (nCombinations - contributions[i][pivot] > 0)
 			{
-				pivot = (ranges[i].max - pivot) / 2;
+				ranges[i].min = pivot + 1;
 			}
-			else if (nCombinations - contributions[i][pivot] < 0)
+			else if (nCombinations - contributions[i][pivot] <= 0)
 			{
-				pivot = (pivot - ranges[i].min) / 2;
+				ranges[i].max = pivot - 1;
 			}
 
-			nextPivot = pivot + 1;
+			pivot = (ranges[i].min + ranges[i].max) / 2;
 		}
 
 		indexes[i] = pivot;
