@@ -16,6 +16,9 @@
 #endif
 
 #define BUFFER_SIZE 10000
+#define SCREEN_COLUMNS 80
+#define PASSED_MSG "PASSED"
+#define FAILED_MSG "FAILED"
 
 struct eq_t
 {
@@ -26,6 +29,62 @@ struct eq_t
 	double eqLose;
 	double eqTie;
 };
+
+bool CompareStrings (void* value1, void* value2, int length)
+{
+	char* v1 = (char*) value1;
+	char* v2 = (char*) value2;
+
+	if (v1 == NULL)
+	{
+		return v2 == NULL;
+	}
+	else if (v2 == NULL)
+	{
+		return false;
+	}
+
+	int i = 0;
+
+	while (v1[i] == v2[i] && v1[i] != '\0')
+	{
+		++i;
+	}
+
+	return v1[i] == v2[i];
+}
+
+bool CompareInts (void* value1, void* value2, int length)
+{
+	int* v1 = (int*) value1;
+	int* v2 = (int*) value2;
+
+	for (int i = 0; i < length; i++)
+	{
+		if (v1[i] != v2[i]) return false;
+	}
+
+	return true;
+}
+
+void Print (void* expected, void* actual, int length, bool (*compare)(void*, void*, int), char* format, ...)
+{
+	char buffer[SCREEN_COLUMNS];
+	va_list valist;
+
+	memset (buffer, 0, SCREEN_COLUMNS);
+
+    va_start (valist, format);
+    int written = vsnprintf (buffer, SCREEN_COLUMNS, format, valist);
+    va_end (valist);
+
+	if (written < 0 || written >= SCREEN_COLUMNS)
+	{
+		return;
+	}
+
+	printf ("%s%*s\n", buffer, SCREEN_COLUMNS - strlen (buffer), compare (expected, actual, length) ? PASSED_MSG : FAILED_MSG);
+}
 
 void HandRankTest (char* boardString, enum hand_rank_t hr)
 {
@@ -40,10 +99,11 @@ void HandRankTest (char* boardString, enum hand_rank_t hr)
 
 	HandRank (board, &result);
 
-	printf ("Board: %s. Expected: %s. Actual: %s\n", boardString, HandRankToString (hr), HandRankToString (result.handRank));
+	Print (&hr, &result.handRank, 1, CompareInts, "Board: %s. Expected: %s. Actual: %s",
+		boardString, HandRankToString (hr), HandRankToString (result.handRank));
 }
 
-void CompareTest (char* boardString1, char* boardString2, int e)
+void CompareTest (char* boardString1, char* boardString2, int expected)
 {
 	struct card_t board1[BOARD_SIZE];
 	struct card_t board2[BOARD_SIZE];
@@ -62,7 +122,10 @@ void CompareTest (char* boardString1, char* boardString2, int e)
 		return;
 	}
 
-	printf ("1st. board: %s. 2nd. board: %s. Expected: %d. Actual: %d\n", boardString1, boardString2, e, Compare (board1, board2));
+	int actual = Compare (board1, board2);
+
+	Print (&expected, &actual, 1, CompareInts, "1st. board: %s. 2nd. board: %s. Expected: %d. Actual: %d",
+		boardString1, boardString2, expected, actual);
 }
 
 void EvalTest (enum rules_t rules, int nPlayers, char* boardCards, char* deadCards, ...)
@@ -148,6 +211,31 @@ void EvalTest (enum rules_t rules, int nPlayers, char* boardCards, char* deadCar
 	}
 }
 
+void IndexInitializationTest (int* indexes, int nIndexes, int nCombinations, int nCards, ...)
+{
+	va_list valist;
+	int expected[BOARD_SIZE];
+
+	for (int i = 0; i < BOARD_SIZE; i++)
+	{
+		indexes[i] = 0;
+	}
+
+	InitialzeIndexes (indexes, nIndexes, nCombinations, nCards);
+
+	va_start (valist, nCards);
+
+	for (int i = BOARD_SIZE - 1; i >= 0; i--)
+	{
+		expected[i] = va_arg (valist, int);
+	}
+
+	va_end (valist);
+
+	Print (expected, indexes, BOARD_SIZE, CompareInts, "Expected: %d-%d-%d-%d-%d. Actual: %d-%d-%d-%d-%d",
+		expected[4], expected[3], expected[2], expected[1], expected[0], indexes[4], indexes[3], indexes[2], indexes[1], indexes[0]);
+}
+
 void RankTests ()
 {
 	HandRankTest ("9c4cKd2h6s", HIGH_CARD);
@@ -220,26 +308,6 @@ void ComparationTests ()
 	CompareTest ("KhJhQhThAh", "JcQcTcAcKc", 0);
 }
 
-void IndexInitializationTest (int* indexes, int nIndexes, int nCombinations, int nCards, ...)
-{
-	va_list valist;
-	int expected[BOARD_SIZE];
-
-	InitialzeIndexes (indexes, nIndexes, nCombinations, nCards);
-
-	va_start (valist, nCards);
-
-	for (int i = nIndexes - 1; i >= 0; i--)
-	{
-		expected[i] = va_arg (valist, int);
-	}
-
-	va_end (valist);
-
-	printf ("Expected: %d-%d-%d-%d-%d. Actual: %d-%d-%d-%d-%d\n",
-		expected[4], expected[3], expected[2], expected[1], expected[0], indexes[4], indexes[3], indexes[2], indexes[1], indexes[0]);
-}
-
 void IndexInitializationTests ()
 {
 	int indexes[BOARD_SIZE];
@@ -249,57 +317,25 @@ void IndexInitializationTests ()
 	IndexInitializationTest (indexes, 5, 1299480, 52, 45, 38, 29, 22, 20);
 	IndexInitializationTest (indexes, 5, 649740, 52, 39, 38, 11, 2, 1);
 	IndexInitializationTest (indexes, 5, 1949220, 52, 49, 33, 21, 13, 7);
+
+	IndexInitializationTest (indexes, 4, 230300, 52, 0, 49, 48, 47, 46);
+	IndexInitializationTest (indexes, 4, 115150, 52, 0, 42, 27, 24, 18);
+	IndexInitializationTest (indexes, 4, 57575, 52, 0, 35, 32, 23, 1);
+	IndexInitializationTest (indexes, 4, 28787, 52, 0, 30, 21, 10, 6);
+	IndexInitializationTest (indexes, 4, 14393, 52, 0, 25, 22, 20, 12);
+
+	IndexInitializationTest (indexes, 3, 18420, 52, 0, 0, 48, 47, 42);
+	IndexInitializationTest (indexes, 3, 9210, 52, 0, 0, 39, 12, 4);
+	IndexInitializationTest (indexes, 3, 4600, 52, 0, 0, 31, 14, 13);
+	IndexInitializationTest (indexes, 3, 555, 52, 0, 0, 15, 14, 8);
+
+	IndexInitializationTest (indexes, 2, 1000, 52, 0, 0, 0, 45, 9);
+	IndexInitializationTest (indexes, 2, 499, 52, 0, 0, 0, 32, 2);
+	IndexInitializationTest (indexes, 2, 108, 52, 0, 0, 0, 15, 2);
+
+	IndexInitializationTest (indexes, 1, 46, 52, 0, 0, 0, 0, 45);
+	IndexInitializationTest (indexes, 1, 2, 52, 0, 0, 0, 0, 1);
 }
-
-// void FsmCombinationsLog ()
-// {
-	// struct card_t board[BOARD_SIZE];
-	// card_t holeCards[4];
-
-	// StringToCards ("3h5h7sAd", hole_cards);
-	// StringToCards ("KsAc2s3c7d", board);
-
-	// FSM_ResetRules (OMAHA);
-	// FSM_ResetHoleCards (holeCards, 4);
-	// FSM_ResetBoardCards (board);
-
-	// while (FSM_Next (board))
-	// {
-		// D_WriteBoards ("C:\\Users\\Gabriel\\Desktop\\boards.txt", &board, 1);
-	// }
-// }
-
-// #ifdef DEBUG
-// void CombinationIndexesLog ()
-// {
-	// card_t deck[DECK_SIZE];
-
-	// for (rank_t r = TWO; r <= ACE; r++)
-	// {
-		// for (suit_t s = CLUBS; s <= SPADES; s++)
-		// {
-			// int i = INDEX (r, s);
-			// deck[i].rank = r;
-			// deck[i].suit = s;
-		// }
-	// }
-
-	// combination_info_t* info = E_Initialize (deck, DECK_SIZE, BOARD_SIZE, BUFFER_SIZE);
-	// bool more = false;
-
-	// info->indexes[0] = DECK_SIZE - 29;
-	// info->indexes[1] = DECK_SIZE - 25;
-	// info->indexes[2] = DECK_SIZE - 19;
-	// info->indexes[3] = DECK_SIZE - 11;
-	// info->indexes[4] = DECK_SIZE - 10;
-
-	// do
-	// {
-		// more = E_Combinations (info);
-		// D_WriteBoards("C:\\Users\\Gabriel\\Desktop\\combinations.txt", (scruct card_t*) info->combination_buffer, info->combination_count);
-	// } while (more);
-// }
-// #endif
 
 void EvalTests ()
 {
@@ -311,17 +347,12 @@ void EvalTests ()
 	EvalTest (OMAHA, 2, "KsAc2s3c", NULL, "3h5h7sAd", "Ts2c8cKc", 28, 12, 0, 70.0d, 30.0d, 0.0d, 12, 28, 0, 30.0d, 70.0d, 0.0d);
 	EvalTest (OMAHA, 2, "KsAc2s", NULL, "3h5h7sAd", "Ts2c8cKc", 433, 387, 0, 52.80d, 47.20d, 0.0d, 387, 433, 0, 47.20d, 52.80d, 0.0d);
 	EvalTest (OMAHA, 2, NULL, NULL, "3h5h7sAd", "Ts2c8cKc", 261195, 238805, 0, 52.24d, 47.76d, 0.0d, 238805, 261195, 0, 47.76d, 52.24d, 0.0d);
-#ifdef DEBUG
-	// FsmCombinationsLog ();
-	// CombinationIndexesLog ();
-#endif
 }
 
 int main ()
 {
+	RankTests ();
+	ComparationTests ();
 	IndexInitializationTests ();
-	//RankTests ();
-	//ComparationTests ();
-	//CombinationTests ();
 	//EvalTests ();
 }

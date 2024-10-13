@@ -539,7 +539,7 @@ THREAD_FUNC_RET_TYPE ThreadFunction (void* args)
 	}
 	else
 	{
-		bool done = false;
+		bool more;
 
 		do
 		{
@@ -558,11 +558,12 @@ THREAD_FUNC_RET_TYPE ThreadFunction (void* args)
 				memcpy (context.bufferOffset, context.currentCombination, context.nCombinationBytes);
 				// Adjust destination buffer index.
 				context.bufferOffset += context.nCombinationCards;
-				context.nCombinationsInBuffer++;
+				++context.nCombinationsInBuffer;
 				// Adjust combination indexes for next combination.
-				done = CMB_Next (context.indexes, context.nCombinationCards, context.nCards);
+				more = CMB_Next (context.indexes, context.nCombinationCards, context.nCards);
+				--context.nCombinations;
 			}
-			while (!done && context.nCombinationsInBuffer < PAGE_SIZE);
+			while (more && context.nCombinationsInBuffer < PAGE_SIZE && context.nCombinations > 0);
 
 			context.nPageEntries = 0;
 
@@ -602,7 +603,7 @@ THREAD_FUNC_RET_TYPE ThreadFunction (void* args)
 				EvalPlayers (&context);
 			}
 		}
-		while (!done);
+		while (more && context.nCombinations > 0);
 	}
 
 	for (int i = 0; i < MAX_PLAYERS; i++)
