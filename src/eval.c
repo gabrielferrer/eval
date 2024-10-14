@@ -77,10 +77,10 @@ int GetPlayerCombinations (enum rules_t rules)
 void InitialzeIndexes (int* indexes, int nIndexes, int nCombinations, int nCards)
 {
 	int minIndex = 0;
-	int maxIndex = nCards - nIndexes;
+	int maxIndex = nCards - BOARD_SIZE;
 	struct range_t ranges[BOARD_SIZE];
 
-	for (int i = 0; i < nIndexes; i++, minIndex++, maxIndex++)
+	for (int i = 0; i < BOARD_SIZE; i++, minIndex++, maxIndex++)
 	{
 		ranges[i].min = minIndex;
 		ranges[i].max = maxIndex;
