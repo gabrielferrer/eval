@@ -271,6 +271,8 @@ bool Eval (struct eval_t* evalData)
 	{
 		evalData->nBoards = 1;
 
+		memset (&threadArgs[0], 0, sizeof (struct thread_args_t));
+
 		threadArgs[0].rules = evalData->rules;
 		threadArgs[0].nPlayers = evalData->nPlayers;
 		threadArgs[0].nBoardCards = evalData->nBoardCards;
@@ -303,13 +305,15 @@ bool Eval (struct eval_t* evalData)
 	else
 	{
 		long int nCombinations = CMB_Combination (nCards, combinationSize);
-		evalData->nBoards += nCombinations;
+		evalData->nBoards = nCombinations;
 
-		int combinationsPerThread = nThreads / nCombinations;
-		int reminder = nThreads % nCombinations;
+		int combinationsPerThread = nCombinations / nThreads;
+		int reminder = nCombinations % nThreads;
 
 		for (int i = 0; i < nThreads; i++)
 		{
+			memset (&threadArgs[i], 0, sizeof (struct thread_args_t));
+
 			threadArgs[i].rules = evalData->rules;
 			threadArgs[i].nPlayers = evalData->nPlayers;
 			threadArgs[i].nBoardCards = evalData->nBoardCards;
@@ -325,14 +329,14 @@ bool Eval (struct eval_t* evalData)
 			memcpy (threadArgs[i].cards, deck, nCards * sizeof (struct card_t));
 
 			threadArgs[i].nCards = nCards;
-			threadArgs[i].nCombinations = combinationsPerThread + i < reminder ? 1 : 0;
+			threadArgs[i].nCombinations = combinationsPerThread + (i < reminder ? 1 : 0);
 			threadArgs[i].nCombinationCards = combinationSize;
 
 			InitialzeIndexes (threadArgs[i].indexes, combinationSize, nCombinations, nCards);
 
 			nCombinations -= threadArgs[i].nCombinations;
 
-			threadIds[i] = TH_CreateThread (ThreadFunction, &threadIds[i]);
+			threadIds[i] = TH_CreateThread (ThreadFunction, &threadArgs[i]);
 
 			if (!VALID_THREAD_ID(threadIds[i]))
 			{
