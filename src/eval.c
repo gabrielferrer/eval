@@ -120,15 +120,7 @@ void InitialzeIndexes (int* indexes, int nIndexes, int nCombinations, int nCards
 
 void FreeThreadInfo (thread_id_t* threadIds, struct thread_args_t* threadArgs, int nThreads, int nPlayers)
 {
-	if (threadArgs)
-	{
-		for (int i = 0; i < nThreads; i++)
-		{
-			if (threadArgs[i].cards) free (threadArgs[i].cards);
-		}
-
-		free (threadArgs);
-	}
+	if (threadArgs) free (threadArgs);
 
 	if (threadIds)
 	{

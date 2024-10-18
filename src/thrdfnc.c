@@ -5,7 +5,7 @@
 #include "cmbntn.h"
 #include "fsm.h"
 
-#define PAGE_SIZE 10000
+#define PAGE_SIZE 3000
 
 struct player_info_t
 {
@@ -21,8 +21,6 @@ struct thread_context_t
 	int nCards;
 	int nCombinations;
 	int nCombinationCards;
-	int nCombinationBytes;
-	int nCombinationsInBuffer;
 	int nPageEntries;
 	enum rules_t rules;
 	struct card_t boardCards[BOARD_SIZE];
@@ -30,9 +28,6 @@ struct thread_context_t
 	struct card_t cards[DECK_SIZE];
 	int indexes[BOARD_SIZE];
 	struct card_t (*boardsPage)[BOARD_SIZE];
-	struct card_t* combinationBuffer;
-	struct card_t* bufferOffset;
-	struct card_t* currentCombination;
 	struct fsm_t fsm;
 	struct thread_result_t results[MAX_PLAYERS];
 	struct player_info_t playerInfo[MAX_PLAYERS];
@@ -213,7 +208,7 @@ void HandRank (struct card_t board[BOARD_SIZE], struct hand_rank_result_t* resul
 		result->handRank = ROYAL_FLUSH;
 		return;
 	}
-	else if ((result->nConsecutiveRanks == 4) && result->nSameSuit == 4)
+	else if (result->nConsecutiveRanks == 4 && result->nSameSuit == 4)
 	{
 		result->handRank = STRAIGHT_FLUSH;
 		return;
@@ -480,6 +475,8 @@ void EvalPlayers (struct thread_context_t* context)
 
 void InitializeThreadContext (struct thread_context_t* context, struct thread_args_t* threadArgs)
 {
+	memset (context, 0, sizeof (struct thread_context_t));
+
 	context->rules = threadArgs->rules;
 	context->nPlayers = threadArgs->nPlayers;
 	context->nBoardCards = threadArgs->nBoardCards;
@@ -487,9 +484,6 @@ void InitializeThreadContext (struct thread_context_t* context, struct thread_ar
 	context->nCards = threadArgs->nCards;
 	context->nCombinations = threadArgs->nCombinations;
 	context->nCombinationCards = threadArgs->nCombinationCards;
-	context->nCombinationBytes = (threadArgs->nCombinationCards == 0 ? threadArgs->nCards : threadArgs->nCombinationCards) * sizeof (struct card_t);
-	context->nCombinationsInBuffer = 0;
-	context->nPageEntries = 0;
 
 	memcpy (context->boardCards, threadArgs->boardCards, threadArgs->nBoardCards * sizeof (struct card_t));
 
@@ -502,15 +496,6 @@ void InitializeThreadContext (struct thread_context_t* context, struct thread_ar
 	memcpy (context->indexes, threadArgs->indexes, threadArgs->nCombinationCards * sizeof (int));
 
 	context->boardsPage = (struct card_t (*)[BOARD_SIZE]) malloc ((threadArgs->nCombinationCards == 0 ? 1 : PAGE_SIZE) * sizeof (struct card_t [BOARD_SIZE]));
-	context->combinationBuffer = (struct card_t*) malloc ((threadArgs->nCombinationCards == 0 ? threadArgs->nCards : threadArgs->nCombinationCards * PAGE_SIZE) * sizeof (struct card_t));
-	context->bufferOffset = context->combinationBuffer;
-	context->currentCombination = threadArgs->nCombinationCards == 0 ? NULL : (struct card_t*) malloc (threadArgs->nCombinationCards * sizeof (struct card_t));
-
-	for (int i = 0; i < MAX_PLAYERS; i++)
-	{
-		context->results[i].wins = 0;
-		context->results[i].ties = 0;
-	}
 
 	FSM_Init (threadArgs->rules, &context->fsm);
 }
@@ -518,10 +503,6 @@ void InitializeThreadContext (struct thread_context_t* context, struct thread_ar
 void FreeThreadContext (struct thread_context_t* context)
 {
 	if (context->boardsPage) free (context->boardsPage);
-
-	if (context->combinationBuffer) free (context->combinationBuffer);
-
-	if (context->currentCombination) free (context->currentCombination);
 }
 
 THREAD_FUNC_RET_TYPE ThreadFunction (void* args)
@@ -539,77 +520,46 @@ THREAD_FUNC_RET_TYPE ThreadFunction (void* args)
 	}
 	else
 	{
-		bool more;
+		bool done = false;
 
 		do
 		{
-			context.nCombinationsInBuffer = 0;
+			context.nPageEntries = 0;
 
 			do
 			{
-				// Prepare current combination.
-				for (int i = 0; i < context.nCombinationCards; i++)
+				for (int i = 0; i < BOARD_SIZE; i++)
 				{
-					context.currentCombination[i].rank = context.cards[context.indexes[i]].rank;
-					context.currentCombination[i].suit = context.cards[context.indexes[i]].suit;
+					if (i < context.nCombinationCards)
+					{
+						context.boardsPage[context.nPageEntries][i].rank = context.cards[context.indexes[i]].rank;
+						context.boardsPage[context.nPageEntries][i].suit = context.cards[context.indexes[i]].suit;
+					}
+					else
+					{
+						context.boardsPage[context.nPageEntries][i].rank = context.boardCards[i - context.nCombinationCards].rank;
+						context.boardsPage[context.nPageEntries][i].suit = context.boardCards[i - context.nCombinationCards].suit;
+					}
 				}
 
-				// Copy combination to buffer.
-				memcpy (context.bufferOffset, context.currentCombination, context.nCombinationBytes);
-				// Adjust destination buffer index.
-				context.bufferOffset += context.nCombinationCards;
-				++context.nCombinationsInBuffer;
+				++context.nPageEntries;
 				// Adjust combination indexes for next combination.
-				more = CMB_Next (context.indexes, context.nCombinationCards, context.nCards);
+				done = CMB_Next (context.indexes, context.nCombinationCards, context.nCards);
 				--context.nCombinations;
 			}
-			while (more && context.nCombinationsInBuffer < PAGE_SIZE && context.nCombinations > 0);
-
-			context.nPageEntries = 0;
-
-			if (context.nBoardCards == 0)
-			{
-//#ifdef DEBUG
-//	D_WriteBoards ("C:\\Users\\Gabriel\\Desktop\\boards.txt", (board_t*) context.combinationBuffer, context.nCombinationsInBuffer);
-//#endif
-				EvalPlayers (&context);
-			}
-			else
-			{
-				while (context.nPageEntries < context.nCombinationsInBuffer)
-				{
-					// Generate combination.
-					for (int i = 0, j = 0; i < BOARD_SIZE; i++)
-					{
-						if (i < context.nBoardCards)
-						{
-							// Take board card if any.
-							context.boardsPage[context.nPageEntries][i].rank = context.boardCards[i].rank;
-							context.boardsPage[context.nPageEntries][i].suit = context.boardCards[i].suit;
-						}
-						else
-						{
-							// Take remaining deck card to complete combination.
-							context.boardsPage[context.nPageEntries][i].rank = context.combinationBuffer[context.nPageEntries * context.nCombinationCards + j].rank;
-							context.boardsPage[context.nPageEntries][i].suit = context.combinationBuffer[context.nPageEntries * context.nCombinationCards + j++].suit;
-						}
-					}
-
-					context.nPageEntries++;
-				}
+			while (!done && context.nPageEntries < PAGE_SIZE && context.nCombinations > 0);
 //#ifdef DEBUG
 //	D_WriteBoards ("C:\\Users\\Gabriel\\Desktop\\boards.txt", boardsPage, nPageEntries);
 //#endif
-				EvalPlayers (&context);
-			}
+			EvalPlayers (&context);
 		}
-		while (more && context.nCombinations > 0);
+		while (!done && context.nCombinations > 0);
 	}
 
-	for (int i = 0; i < MAX_PLAYERS; i++)
+	for (int i = 0; i < context.nPlayers; i++)
 	{
-		threadArgs->results[i].wins = i < context.nPlayers ? context.results[i].wins : 0;
-		threadArgs->results[i].ties = i < context.nPlayers ? context.results[i].ties : 0;
+		threadArgs->results[i].wins = context.results[i].wins;
+		threadArgs->results[i].ties = context.results[i].ties;
 	}
 
 	FreeThreadContext (&context);
