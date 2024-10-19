@@ -76,6 +76,16 @@ char* HandRankToString (enum hand_rank_t handRank)
 	return NULL;
 }
 
+char* RulesToString (enum rules_t rules)
+{
+	if (rules == HOLDEM) return "Hold'em";
+	if (rules == OMAHA) return "Omaha";
+	if (rules == OMAHA5) return "Omaha-5";
+	if (rules == OMAHA6) return "Omaha-6";
+
+	return NULL;
+}
+
 struct card_t* StringToCards (char* cardsString, struct card_t* cards)
 {
 	if (cardsString == NULL)

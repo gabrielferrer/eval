@@ -2,8 +2,10 @@
 #include <stdarg.h>
 #include "debug.h"
 #include "misc.h"
+#include "thrdfnc.h"
 
 #define PATH_SIZE 1000
+#define BUFFER_SIZE 100
 
 void D_WriteSideBySideBoards (struct card_t best[BOARD_SIZE], struct card_t worst[BOARD_SIZE], char* format, ...)
 {
@@ -68,4 +70,59 @@ void D_WriteBoards (struct card_t (*boards)[BOARD_SIZE], int count, char* path)
 	}
 
 	fclose (output);
+}
+
+void D_WriteThreadArguments (struct thread_args_t* threadArgs, char* path)
+{
+	char buffer[BUFFER_SIZE];
+	FILE* output = fopen (path, "a");
+
+	if (output == NULL)
+	{
+		return;
+	}
+
+	sprintf (buffer, "Thread number:          %d\n", threadArgs->threadNr);
+	fwrite (buffer, 1, strlen (buffer), output);
+
+	sprintf (buffer, "Nr. of players:         %d\n", threadArgs->nPlayers);
+	fwrite (buffer, 1, strlen (buffer), output);
+
+	sprintf (buffer, "Nr. of board cards:     %d\n", threadArgs->nBoardCards);
+	fwrite (buffer, 1, strlen (buffer), output);
+
+	sprintf (buffer, "Nr. of hole cards:      %d\n", threadArgs->nHoleCards);
+	fwrite (buffer, 1, strlen (buffer), output);
+
+	sprintf (buffer, "Nr. of cards at deck:   %d\n", threadArgs->nCards);
+	fwrite (buffer, 1, strlen (buffer), output);
+
+	sprintf (buffer, "Nr. of combinations:    %d\n", threadArgs->nCombinations);
+	fwrite (buffer, 1, strlen (buffer), output);
+
+	sprintf (buffer, "Nr. of cards per comb.: %d\n", threadArgs->nCombinationCards);
+	fwrite (buffer, 1, strlen (buffer), output);
+
+	sprintf (buffer, "Rules:                  %s\n", RulesToString (threadArgs->rules));
+	fwrite (buffer, 1, strlen (buffer), output);
+
+	sprintf (buffer, "Indexes:                ");
+	fwrite (buffer, 1, strlen (buffer), output);
+
+	for (int i = 0; i < BOARD_SIZE; i++)
+	{
+		sprintf (buffer, "%d", threadArgs->indexes[i]);
+		fwrite(buffer, 1, strlen (buffer), output);
+
+		if (i + 1 < BOARD_SIZE)
+		{
+			fwrite (", ", 1, 2, output);
+		}
+		else
+		{
+			fwrite ("\n", 1, 1, output);
+		}
+	}
+
+	fwrite ("\n", 1, 1, output);
 }

@@ -14,6 +14,8 @@ char ToSuitString (enum suit_t s);
 
 char* HandRankToString (enum hand_rank_t handRank);
 
+char* RulesToString (enum rules_t rules);
+
 struct card_t* StringToCards (char* cardsString, struct card_t* cards);
 
 char* CardToString (struct card_t* card, char* destination);

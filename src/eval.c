@@ -77,13 +77,13 @@ int GetPlayerCombinations (enum rules_t rules)
 void InitialzeIndexes (int* indexes, int nIndexes, int nCombinations, int nCards)
 {
 	int minIndex = 0;
-	int maxIndex = nCards - BOARD_SIZE;
+	int maxIndex = nCards - nIndexes;
 	struct range_t ranges[BOARD_SIZE];
 
 	for (int i = 0; i < BOARD_SIZE; i++, minIndex++, maxIndex++)
 	{
-		ranges[i].min = minIndex;
-		ranges[i].max = maxIndex;
+		ranges[i].min = i < nIndexes ? minIndex : 0;
+		ranges[i].max = i < nIndexes ? maxIndex : 0;
 	}
 
 	for (int i = nIndexes - 1; i >= 0; i--)
@@ -349,6 +349,9 @@ bool Eval (struct eval_t* evalData)
 
 				return false;
 			}
+#ifdef DEBUG
+			D_WriteThreadArguments (&threadArgs[i], "C:\\Users\\Gabriel\\Desktop\\threadargs.txt");
+#endif
 		}
 	}
 
