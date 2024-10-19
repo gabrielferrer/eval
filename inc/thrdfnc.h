@@ -32,6 +32,9 @@ struct thread_result_t
 
 struct thread_args_t
 {
+#ifdef DEBUG
+	int threadNr;
+#endif
 	int nPlayers;                                    // How many players.
 	int nBoardCards;                                 // How many cards over the board.
 	int nHoleCards;                                  // How many hole cards per player.

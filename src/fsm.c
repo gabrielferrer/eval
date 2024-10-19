@@ -13,7 +13,7 @@ bool Holdem0 (struct card_t board[BOARD_SIZE], struct fsm_t* fsm)
 	return true;
 }
 
-bool HoldemInit1a (struct card_t board[BOARD_SIZE], struct fsm_t* fsm)
+bool InitHoldem1a (struct card_t board[BOARD_SIZE], struct fsm_t* fsm)
 {
 	fsm->cardIndex = 0;
 	fsm->i0[0] = 0;
@@ -90,7 +90,7 @@ bool Holdem2 (struct card_t board[BOARD_SIZE], struct fsm_t* fsm)
 	return true;
 }
 
-bool OmahaInit (struct card_t board[BOARD_SIZE], struct fsm_t* fsm)
+bool InitOmaha (struct card_t board[BOARD_SIZE], struct fsm_t* fsm)
 {
 	fsm->i0[0] = 0;
 	fsm->i0[1] = 1;
@@ -140,7 +140,7 @@ void FSM_Init (enum rules_t rules, struct fsm_t* fsm)
 	if (rules == HOLDEM)
 	{
 		fsm->states[0] = Holdem0;
-		fsm->states[1] = HoldemInit1a;
+		fsm->states[1] = InitHoldem1a;
 		fsm->states[2] = Holdem1;
 		fsm->states[3] = InitHoldem1b;
 		fsm->states[4] = Holdem1;
@@ -150,7 +150,7 @@ void FSM_Init (enum rules_t rules, struct fsm_t* fsm)
 	}
 	else
 	{
-		fsm->states[0] = OmahaInit;
+		fsm->states[0] = InitOmaha;
 		fsm->states[1] = Omaha;
 		fsm->nStates = OMAHA_STATES;
 	}

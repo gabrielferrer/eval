@@ -3,8 +3,8 @@
 
 #include "poker.h"
 
-void D_WriteSideBySideBoards (char* path, struct card_t best[BOARD_SIZE], struct card_t worst[BOARD_SIZE]);
+void D_WriteSideBySideBoards (struct card_t best[BOARD_SIZE], struct card_t worst[BOARD_SIZE], char* format, ...);
 
-void D_WriteBoards (char* path, struct card_t (*boards)[BOARD_SIZE], int count);
+void D_WriteBoards (struct card_t (*boards)[BOARD_SIZE], int count, char* path);
 
 #endif

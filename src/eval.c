@@ -254,17 +254,21 @@ bool Eval (struct eval_t* evalData)
 	}
 
 	int combinationSize = BOARD_SIZE - evalData->nBoardCards;
-	int nThreads = combinationSize == 0 ? 1 : evalData->nCores;
-
-	thread_id_t* threadIds = (thread_id_t*) malloc (nThreads * sizeof (thread_id_t));
-	struct thread_args_t* threadArgs = (struct thread_args_t*) malloc (nThreads * sizeof (struct thread_args_t));
+	thread_id_t* threadIds = NULL;
+	struct thread_args_t* threadArgs = NULL;
+	int nThreads = 0;
 
 	if (combinationSize == 0)
 	{
-		evalData->nBoards = 1;
+		evalData->nBoards = nThreads = 1;
 
-		memset (&threadArgs[0], 0, sizeof (struct thread_args_t));
+		threadIds = (thread_id_t*) malloc (nThreads * sizeof (thread_id_t));
+		threadArgs = (struct thread_args_t*) malloc (nThreads * sizeof (struct thread_args_t));
 
+		memset (threadArgs, 0, sizeof (struct thread_args_t));
+#ifdef DEBUG
+		threadArgs[0].threadNr = 0;
+#endif
 		threadArgs[0].rules = evalData->rules;
 		threadArgs[0].nPlayers = evalData->nPlayers;
 		threadArgs[0].nBoardCards = evalData->nBoardCards;
@@ -299,13 +303,20 @@ bool Eval (struct eval_t* evalData)
 		long int nCombinations = CMB_Combination (nCards, combinationSize);
 		evalData->nBoards = nCombinations;
 
-		int combinationsPerThread = nCombinations / nThreads;
-		int reminder = nCombinations % nThreads;
+		int combinationsPerThread = nCombinations / evalData->nCores;
+		int reminder = nCombinations % evalData->nCores;
+
+		nThreads = combinationsPerThread == 0 ? reminder : evalData->nCores;
+
+		threadIds = (thread_id_t*) malloc (nThreads * sizeof (thread_id_t));
+		threadArgs = (struct thread_args_t*) malloc (nThreads * sizeof (struct thread_args_t));
 
 		for (int i = 0; i < nThreads; i++)
 		{
 			memset (&threadArgs[i], 0, sizeof (struct thread_args_t));
-
+#ifdef DEBUG
+			threadArgs[i].threadNr = i;
+#endif
 			threadArgs[i].rules = evalData->rules;
 			threadArgs[i].nPlayers = evalData->nPlayers;
 			threadArgs[i].nBoardCards = evalData->nBoardCards;
@@ -338,7 +349,7 @@ bool Eval (struct eval_t* evalData)
 
 				return false;
 			}
-		}		
+		}
 	}
 
 	TH_WaitThreads (threadIds, nThreads);

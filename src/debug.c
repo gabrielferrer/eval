@@ -1,10 +1,25 @@
 #include <stdio.h>
+#include <stdarg.h>
 #include "debug.h"
 #include "misc.h"
 
-void D_WriteSideBySideBoards (char* path, struct card_t best[BOARD_SIZE], struct card_t worst[BOARD_SIZE])
+#define PATH_SIZE 1000
+
+void D_WriteSideBySideBoards (struct card_t best[BOARD_SIZE], struct card_t worst[BOARD_SIZE], char* format, ...)
 {
+	char path[PATH_SIZE];
 	char cardBuffer[3];
+	va_list valist;
+
+	va_start (valist, format);
+	int written = vsnprintf (path, PATH_SIZE, format, valist);
+	va_end (valist);
+
+	if (written < 0 || written >= PATH_SIZE)
+	{
+		return;
+	}
+
 	FILE* output = fopen (path, "a");
 
 	if (output == NULL)
@@ -31,7 +46,7 @@ void D_WriteSideBySideBoards (char* path, struct card_t best[BOARD_SIZE], struct
 	fclose (output);
 }
 
-void D_WriteBoards (char* path, struct card_t (*boards)[BOARD_SIZE], int count)
+void D_WriteBoards (struct card_t (*boards)[BOARD_SIZE], int count, char* path)
 {
 	char cardBuffer[3];
 	FILE* output = fopen (path, "a");
