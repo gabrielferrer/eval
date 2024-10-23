@@ -221,7 +221,7 @@ void IndexInitializationTest (int* indexes, int nIndexes, int nCombinations, int
 		indexes[i] = 0;
 	}
 
-	InitialzeIndexes (indexes, nIndexes, nCombinations, nCards);
+	InitializeIndexes (indexes, nIndexes, nCombinations, nCards);
 
 	va_start (valist, nCards);
 

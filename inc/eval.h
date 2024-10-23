@@ -42,7 +42,7 @@ struct eval_t
 };
 
 #ifdef DEBUG
-void InitialzeIndexes (int* indexes, int nIndexes, int nCombinations, int nCards);
+void InitializeIndexes (int* indexes, int nIndexes, int nCombinations, int nCards);
 #endif
 
 bool Eval (struct eval_t* evalData);

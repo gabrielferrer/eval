@@ -109,12 +109,12 @@ void D_WriteThreadArguments (struct thread_args_t* threadArgs, char* path)
 	sprintf (buffer, "Indexes:                ");
 	fwrite (buffer, 1, strlen (buffer), output);
 
-	for (int i = 0; i < BOARD_SIZE; i++)
+	for (int i = threadArgs->nCombinationCards - 1; i >= 0; i--)
 	{
 		sprintf (buffer, "%d", threadArgs->indexes[i]);
 		fwrite(buffer, 1, strlen (buffer), output);
 
-		if (i + 1 < BOARD_SIZE)
+		if (i > 0)
 		{
 			fwrite (", ", 1, 2, output);
 		}
