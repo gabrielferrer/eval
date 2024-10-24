@@ -48,9 +48,21 @@ void D_WriteSideBySideBoards (struct card_t best[BOARD_SIZE], struct card_t wors
 	fclose (output);
 }
 
-void D_WriteBoards (struct card_t (*boards)[BOARD_SIZE], int count, char* path)
+void D_WriteBoards (struct card_t (*boards)[BOARD_SIZE], int count, char* format, ...)
 {
+	char path[PATH_SIZE];
 	char cardBuffer[3];
+	va_list valist;
+
+	va_start (valist, format);
+	int written = vsnprintf (path, PATH_SIZE, format, valist);
+	va_end (valist);
+
+	if (written < 0 || written >= PATH_SIZE)
+	{
+		return;
+	}
+
 	FILE* output = fopen (path, "a");
 
 	if (output == NULL)
@@ -66,13 +78,16 @@ void D_WriteBoards (struct card_t (*boards)[BOARD_SIZE], int count, char* path)
 			fwrite (cardBuffer, 1, 2, output);
 		}
 
-		fwrite ("\n", 1, 1, output);
+		if (i + 1 < count)
+		{
+			fwrite ("\n", 1, 1, output);
+		}
 	}
 
 	fclose (output);
 }
 
-void D_WriteThreadArguments (struct thread_args_t* threadArgs, char* path)
+void D_WriteThreadArguments (struct thread_args_t* threadArgs, int combinationsLeft, char* path)
 {
 	char buffer[BUFFER_SIZE];
 	FILE* output = fopen (path, "a");
@@ -95,6 +110,9 @@ void D_WriteThreadArguments (struct thread_args_t* threadArgs, char* path)
 	fwrite (buffer, 1, strlen (buffer), output);
 
 	sprintf (buffer, "Nr. of cards at deck:   %d\n", threadArgs->nCards);
+	fwrite (buffer, 1, strlen (buffer), output);
+
+	sprintf (buffer, "Combinations left:      %d\n", combinationsLeft);
 	fwrite (buffer, 1, strlen (buffer), output);
 
 	sprintf (buffer, "Nr. of combinations:    %d\n", threadArgs->nCombinations);

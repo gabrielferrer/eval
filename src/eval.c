@@ -106,7 +106,7 @@ void InitializeIndexes (int* indexes, int nIndexes, int nCombinations, int nCard
 			}
 		}
 
-		if (nCombinations - contributions[i][pivot] < 0)
+		if (nCombinations - contributions[i][pivot] <= 0 && pivot > 0)
 		{
 			--pivot;
 		}
@@ -334,7 +334,9 @@ bool Eval (struct eval_t* evalData)
 			threadArgs[i].nCombinationCards = combinationSize;
 
 			InitializeIndexes (threadArgs[i].indexes, combinationSize, nCombinations, nCards);
-
+#ifdef DEBUG
+			D_WriteThreadArguments (&threadArgs[i], nCombinations, "C:\\Users\\Gabriel\\Desktop\\threadargs.txt");
+#endif
 			nCombinations -= threadArgs[i].nCombinations;
 
 			threadIds[i] = TH_CreateThread (ThreadFunction, &threadArgs[i]);
@@ -347,9 +349,6 @@ bool Eval (struct eval_t* evalData)
 
 				return false;
 			}
-#ifdef DEBUG
-			D_WriteThreadArguments (&threadArgs[i], "C:\\Users\\Gabriel\\Desktop\\threadargs.txt");
-#endif
 		}
 	}
 

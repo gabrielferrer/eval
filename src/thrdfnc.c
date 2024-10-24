@@ -442,24 +442,24 @@ void EvalPlayers (struct thread_context_t* context)
 
 			if (comparison > 0)
 			{
-// #ifdef DEBUG
-				// D_WriteSideBySideBoards (context->playerInfo[0].bestBoard, bestBoard, "C:\\Users\\Gabriel\\Desktop\\eval\\boards\\sidebyside-%d.txt", context->threadNr);
-// #endif
+//#ifdef DEBUG
+//				D_WriteSideBySideBoards (context->playerInfo[0].bestBoard, bestBoard, "C:\\Users\\Gabriel\\Desktop\\eval\\boards\\loses-%d.txt", context->threadNr);
+//#endif
 				continue;
 			}
 
 			if (comparison == 0)
 			{
-// #ifdef DEBUG
-				// D_WriteSideBySideBoards (context->playerInfo[0].bestBoard, bestBoard, "C:\\Users\\Gabriel\\Desktop\\eval\\boards\\ties-%d.txt", context->threadNr);
-// #endif
+//#ifdef DEBUG
+//				D_WriteSideBySideBoards (context->playerInfo[0].bestBoard, bestBoard, "C:\\Users\\Gabriel\\Desktop\\eval\\boards\\ties-%d.txt", context->threadNr);
+//#endif
 				memcpy (context->playerInfo[nBest].bestBoard, bestBoard, sizeof (struct card_t [BOARD_SIZE]));
 				context->playerInfo[nBest++].playerIndex = j;
 				continue;
 			}
-// #ifdef DEBUG
-				// D_WriteSideBySideBoards (bestBoard, context->playerInfo[0].bestBoard, "C:\\Users\\Gabriel\\Desktop\\eval\\boards\\sidebyside-%d.txt", context->threadNr);
-// #endif
+//#ifdef DEBUG
+//				D_WriteSideBySideBoards (bestBoard, context->playerInfo[0].bestBoard, "C:\\Users\\Gabriel\\Desktop\\eval\\boards\\wins-%d.txt", context->threadNr);
+//#endif
 			nBest = 0;
 			memcpy (context->playerInfo[nBest].bestBoard, bestBoard, sizeof (struct card_t [BOARD_SIZE]));
 			context->playerInfo[nBest++].playerIndex = j;
@@ -556,9 +556,9 @@ THREAD_FUNC_RET_TYPE ThreadFunction (void* args)
 				--context.nCombinations;
 			}
 			while (!done && context.nPageEntries < PAGE_SIZE && context.nCombinations > 0);
-//#ifdef DEBUG
-//	D_WriteBoards (boardsPage, nPageEntries, "C:\\Users\\Gabriel\\Desktop\\eval\\boards.txt");
-//#endif
+#ifdef DEBUG
+			D_WriteBoards (context.boardsPage, context.nPageEntries, "C:\\Users\\Gabriel\\Desktop\\eval\\boards-%d.txt", context.threadNr);
+#endif
 			EvalPlayers (&context);
 		}
 		while (!done && context.nCombinations > 0);

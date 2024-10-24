@@ -330,6 +330,7 @@ void IndexInitializationTests ()
 	IndexInitializationTest (indexes, 3, 555, 52, 0, 0, 15, 14, 8);
 
 	IndexInitializationTest (indexes, 2, 1000, 52, 0, 0, 0, 45, 9);
+	IndexInitializationTest (indexes, 2, 780, 45, 0, 0, 0, 39, 38);
 	IndexInitializationTest (indexes, 2, 499, 52, 0, 0, 0, 32, 2);
 	IndexInitializationTest (indexes, 2, 108, 52, 0, 0, 0, 15, 2);
 
