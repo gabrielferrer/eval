@@ -17,20 +17,41 @@ struct range_t
 	long int max;
 };
 
-struct range_t ranges[INDEXES] = {	{ 0, 47 }, { 1, 48 }, { 2, 49 }, { 3, 50 }, { 4, 51 } };
+bool CheckArguments(int argc, char* argv[])
+{
+	return argc == 2 || argc == 3 && (strcmp(argv[1], "-a") == 0 || strcmp(argv[1], "-d") == 0);
+}
 
-long int result[INDEXES][SET_SIZE];
+void PrintUsage(char* programName)
+{
+	printf ("Use: %s [options] path\n", programName);
+	printf ("\n");
+	printf ("options:\n");
+	printf ("\t-a: generate combinations ascending (default).\n");
+	printf ("\t-d: generate combinations descending.\n");
+	printf ("\n");
+}
 
 int main (int argc, char* argv[])
 {
-	if (argc != 2)
+	if (!CheckArguments(argc, argv))
 	{
-		return -1;
+		PrintUsage(argv[0]);
+		return 0;
 	}
 
 	char values[INDEXES][SET_SIZE][BUFFER_SIZE];
 	int maxlenghts[SET_SIZE];
 	int lengths[INDEXES];
+	struct range_t ranges[INDEXES];
+	long int result[INDEXES][SET_SIZE];
+	bool asc = argc != 3 || strcmp(argv[1], "-d") != 0;
+
+	for (int i = 0; i < INDEXES; i++)
+	{
+		ranges[i].min = asc ? i : 0;
+		ranges[i].max = asc ? SET_SIZE - 1 : SET_SIZE - i - 1;
+	}
 
 	for (int i = 0; i < INDEXES; i++)
 	{
@@ -49,11 +70,11 @@ int main (int argc, char* argv[])
 	{
 		for (int j = ranges[i].min; j <= ranges[i].max; j++)
 		{
-			result[i][j] = CMB_Combination (j, i + 1);
+			result[i][j] = CMB_Combination (asc ? j : SET_SIZE - j - 1, i + 1);
 		}
 	}
 
-	FILE* output = fopen (argv[1], "w");
+	FILE* output = fopen (argc == 2 ? argv[1] : argv[2], "w");
 
 	if (output == NULL)
 	{
@@ -86,9 +107,12 @@ int main (int argc, char* argv[])
 		{
 			int length = strlen (values[i][j]);
 
-			for (int k = 0; k < maxlenghts[j] - length; k++)
+			if (asc)
 			{
-				fwrite (" ", sizeof (char), 1, output);
+				for (int k = 0; k < maxlenghts[j] - length; k++)
+				{
+					fwrite (" ", sizeof (char), 1, output);
+				}
 			}
 
 			fwrite (values[i][j], sizeof (char), length, output);
@@ -96,6 +120,14 @@ int main (int argc, char* argv[])
 			if (j + 1 < SET_SIZE)
 			{
 				fwrite (", ", sizeof (char), 2, output);
+			}
+
+			if (!asc)
+			{
+				for (int k = 0; k < maxlenghts[j] - length; k++)
+				{
+					fwrite (" ", sizeof (char), 1, output);
+				}
 			}
 		}
 

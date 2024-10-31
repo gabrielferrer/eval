@@ -129,7 +129,7 @@ void D_WriteThreadArguments (struct thread_args_t* threadArgs, int combinationsL
 
 	for (int i = threadArgs->nCombinationCards - 1; i >= 0; i--)
 	{
-		sprintf (buffer, "%d", threadArgs->indexes[i]);
+		sprintf (buffer, "i%d=%d", i, threadArgs->indexes[i]);
 		fwrite(buffer, 1, strlen (buffer), output);
 
 		if (i > 0)
