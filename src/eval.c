@@ -111,7 +111,7 @@ void InitializeIndexes (int* indexes, int nIndexes, int nCombinations, int nCard
 			--pivot;
 		}
 
-		indexes[i] = pivot;
+		indexes[nIndexes - i - 1] = nCards - pivot - 1;
 		nCombinations -= contributions[i][pivot];
 	}
 }
