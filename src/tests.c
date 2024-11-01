@@ -348,6 +348,12 @@ void EvalTests ()
 	EvalTest (HOLDEM, 2, "KsAc2s3c", NULL, "3h5h", "Ts2c", 39, 5, 0, 88.64d, 11.36d, 0.0d, 5, 39, 0, 11.36d, 88.64d, 0.0d);
 	EvalTest (HOLDEM, 2, "KsAc2s", NULL, "3h5h", "Ts2c", 341, 649, 0, 34.44d, 65.56d, 0.0d, 649, 341, 0, 65.56d, 34.44d, 0.0d);
 	EvalTest (HOLDEM, 2, NULL, NULL, "3h5h", "Ts2c", 788648, 889063, 34593, 46.06d, 51.92d, 2.02d, 889063, 788648, 34593, 51.92d, 46.06d, 2.02d);
+
+	EvalTest (HOLDEM, 3, "9c5c2h8d7s", NULL, "Js2s", "Tc3s", "5h6h", 0, 1, 0, 0.0d, 100.0d, 0.0d, 0, 1, 0, 0.0d, 100.0d, 0.0d, 1, 0, 0, 100.0d, 0.0d, 0.0d);
+	EvalTest (HOLDEM, 3, "9c5c2h8d", NULL, "Js2s", "Tc3s", "5h6h", 5, 37, 0, 11.90d, 88.10d, 0.0d, 3, 39, 0, 7.14d, 92.86d, 0.0d, 34, 8, 0, 80.95d, 19.05d, 0.0d);
+	EvalTest (HOLDEM, 3, "9c5c2h", NULL, "Js2s", "Tc3s", "5h6h", 165, 738, 0, 18.27d, 81.73d, 0.0d, 157, 746, 0, 17.39d, 82.61d, 0.0d, 581, 322, 0, 64.34d, 35.66d, 0.0d);
+	EvalTest (HOLDEM, 3, NULL, NULL, "Js2s", "Tc3s", "5h6h", 503561, 853311, 13882, 36.74d, 62.25d, 1.01d, 342090, 1014782, 13882, 24.96d, 74.03d, 1.01d, 511221, 845651, 13882, 37.29d, 61.69d, 1.01d);
+
 	EvalTest (OMAHA, 2, "KsAc2s3c7d", NULL, "3h5h7sAd", "Ts2c8cKc", 1, 0, 0, 100.0d, 0.0d, 0.0d, 0, 1, 0, 0.0d, 100.0d, 0.0d);
 	EvalTest (OMAHA, 2, "KsAc2s3c", NULL, "3h5h7sAd", "Ts2c8cKc", 28, 12, 0, 70.0d, 30.0d, 0.0d, 12, 28, 0, 30.0d, 70.0d, 0.0d);
 	EvalTest (OMAHA, 2, "KsAc2s", NULL, "3h5h7sAd", "Ts2c8cKc", 433, 387, 0, 52.80d, 47.20d, 0.0d, 387, 433, 0, 47.20d, 52.80d, 0.0d);
