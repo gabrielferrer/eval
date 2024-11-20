@@ -70,15 +70,15 @@ void main (int argc, char* argv[])
 
 	int nPlayers = 0;
 
-	for (; optind < argc; optind++, nPlayers++)
+	for (; optind + nPlayers < argc; nPlayers++)
 	{
-		if (StringToCards (argv[optind], evalData.holeCards[nPlayers]) == NULL)
+		if (StringToCards (argv[optind + nPlayers], evalData.holeCards[nPlayers]) == NULL)
 		{
-			printf ("Invalid hole cards: %s\n", argv[optind]);
+			printf ("Invalid hole cards: %s\n", argv[optind + nPlayers]);
 			return;
 		}
 
-		int nHoleCards = strlen (argv[optind]) / 2;
+		int nHoleCards = strlen (argv[optind + nPlayers]) / 2;
 
 		if (nHoleCards != 2 && nHoleCards != 4 && nHoleCards != 5 && nHoleCards != 6)
 		{
@@ -142,7 +142,7 @@ void main (int argc, char* argv[])
 	{
 		int loses = evalData.nBoards - evalData.equities[i].wins - evalData.equities[i].ties;
 
-		printf ("Data for player %d:\n", i + 1);
+		printf ("Data for player %d (%s):\n", i + 1, argv[optind + i]);
 		printf (
 			"Wins: %d (%2.2f). Loses: %d (%2.2f). Ties: %d (%2.2f)\n",
 			evalData.equities[i].wins,
