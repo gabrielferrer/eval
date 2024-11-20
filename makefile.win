@@ -3,21 +3,34 @@ INCLUDE=-Iinc
 SRCDIR=src
 BINDIR=bin
 OBJDIR=obj
-DEPENDENCIES=
 TESTSOBJDIRS="$(OBJDIR)\tests.o" "$(OBJDIR)\eval.o" "$(OBJDIR)\misc.o" "$(OBJDIR)\fsm.o" \
 "$(OBJDIR)\cmbntn.o" "$(OBJDIR)\thrdfnc.o" "$(OBJDIR)\core.o" "$(OBJDIR)\thread.o"
 COMBSOBJDIRS="$(OBJDIR)\combs.o" "$(OBJDIR)\cmbntn.o"
+DLLOBJSDIRS="$(OBJDIR)\eval.o" "$(OBJDIR)\misc.o" "$(OBJDIR)\fsm.o" "$(OBJDIR)\cmbntn.o" \
+"$(OBJDIR)\thrdfnc.o" "$(OBJDIR)\core.o" "$(OBJDIR)\thread.o"
+PEVALOBJDIRS="$(OBJDIR)\peval.o"
 TESTSOBJS=tests.o eval.o misc.o fsm.o cmbntn.o thrdfnc.o core.o thread.o
 COMBSOBJS=combs.o cmbntn.o
-BINS=tests combs
+DLLOBJS=eval.o misc.o fsm.o cmbntn.o thrdfnc.o core.o thread.o
+PEVALOBJS=peval.o
+BINS=tests combs dll peval
 CFLAGS=$(INCLUDE) -DWIN
+TESTSLDFLAGS=
+COMBSLDFLAGS=
+DLLLDFLAGS=-shared -Os
+PEVALLDFLAGS=-Os
 
 ifdef DEBUG
 CFLAGS+=-g -DDEBUG
 TESTSOBJDIRS+="$(OBJDIR)\debug.o"
 COMBSOBJDIRS+="$(OBJDIR)\debug.o" "$(OBJDIR)\misc.o"
+PEVALOBJDIRS+="$(OBJDIR)\debug.o"
 TESTSOBJS+=debug.o
 COMBSOBJS+=debug.o misc.o
+PEVALOBJS+=debug.o
+else
+DLLLDFLAGS+=-s
+PEVALLDFLAGS+=-s
 endif
 
 all: $(BINS)
@@ -52,11 +65,20 @@ thread.o:
 debug.o:
 	$(CC) $(CFLAGS) -c "$(SRCDIR)\debug.c" -o "$(OBJDIR)\debug.o"
 
+peval.o:
+	$(CC) $(CFLAGS) -c "$(SRCDIR)\peval.c" -o "$(OBJDIR)\peval.o"
+
 tests: $(TESTSOBJS)
-	$(CC) $(LDFLAGS) $(TESTSOBJDIRS) -o "$(BINDIR)\tests.exe"
+	$(CC) $(TESTSLDFLAGS) $(TESTSOBJDIRS) -o "$(BINDIR)\tests.exe"
 
 combs: $(COMBSOBJS)
-	$(CC) $(LDFLAGS) $(COMBSOBJDIRS) -o "$(BINDIR)\combs.exe"
+	$(CC) $(COMBSLDFLAGS) $(COMBSOBJDIRS) -o "$(BINDIR)\combs.exe"
+
+dll: $(DLLOBJS)
+	$(CC) $(DLLLDFLAGS) $(DLLOBJSDIRS) -o "$(BINDIR)\eval.dll"
+
+peval: $(PEVALOBJS)
+	$(CC) $(PEVALLDFLAGS) $(PEVALOBJDIRS) -o "$(BINDIR)\peval.exe" "$(BINDIR)\eval.dll"
 
 clean:
 	del /F /Q "$(OBJDIR)\*.*" "$(BINDIR)\*.*"

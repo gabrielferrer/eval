@@ -7,6 +7,7 @@
 #include "debug.h"
 #endif
 
+#include "core.h"
 #include "eval.h"
 #include "enum.h"
 #include "misc.h"
@@ -134,6 +135,7 @@ void FreeThreadInfo (thread_id_t* threadIds, struct thread_args_t* threadArgs, i
 	}
 }
 
+__declspec(dllexport)
 bool Eval (struct eval_t* evalData)
 {
 	struct card_t deck[DECK_SIZE];
@@ -298,13 +300,14 @@ bool Eval (struct eval_t* evalData)
 	}
 	else
 	{
+		int nCores = GetCores ();
 		long int nCombinations = CMB_Combination (nCards, combinationSize);
 		evalData->nBoards = nCombinations;
 
-		int combinationsPerThread = nCombinations / evalData->nCores;
-		int reminder = nCombinations % evalData->nCores;
+		int combinationsPerThread = nCombinations / nCores;
+		int reminder = nCombinations % nCores;
 
-		nThreads = combinationsPerThread == 0 ? reminder : evalData->nCores;
+		nThreads = combinationsPerThread == 0 ? reminder : nCores;
 
 		threadIds = (thread_id_t*) malloc (nThreads * sizeof (thread_id_t));
 		threadArgs = (struct thread_args_t*) malloc (nThreads * sizeof (struct thread_args_t));

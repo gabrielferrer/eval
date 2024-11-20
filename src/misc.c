@@ -2,6 +2,7 @@
 #include <string.h>
 #include "misc.h"
 
+__declspec(dllexport)
 enum rank_t ToRank (char r)
 {
 	if (r == '2') return TWO;
@@ -21,6 +22,7 @@ enum rank_t ToRank (char r)
 	return NO_RANK;
 }
 
+__declspec(dllexport)
 enum suit_t ToSuit (char s)
 {
 	if (s == 'c') return CLUBS;
@@ -31,6 +33,7 @@ enum suit_t ToSuit (char s)
 	return NO_SUIT;
 }
 
+__declspec(dllexport)
 char ToRankString (enum rank_t r)
 {
 	if (r == TWO) return '2';
@@ -50,6 +53,7 @@ char ToRankString (enum rank_t r)
 	return '\0';
 }
 
+__declspec(dllexport)
 char ToSuitString (enum suit_t s)
 {
 	if (s == CLUBS) return 'c';
@@ -60,6 +64,7 @@ char ToSuitString (enum suit_t s)
 	return '\0';	
 }
 
+__declspec(dllexport)
 char* HandRankToString (enum hand_rank_t handRank)
 {
 	if (handRank == HIGH_CARD) return "High Card";
@@ -76,6 +81,7 @@ char* HandRankToString (enum hand_rank_t handRank)
 	return NULL;
 }
 
+__declspec(dllexport)
 char* RulesToString (enum rules_t rules)
 {
 	if (rules == HOLDEM) return "Hold'em";
@@ -86,6 +92,7 @@ char* RulesToString (enum rules_t rules)
 	return NULL;
 }
 
+__declspec(dllexport)
 struct card_t* StringToCards (char* cardsString, struct card_t* cards)
 {
 	if (cardsString == NULL)
@@ -126,6 +133,7 @@ struct card_t* StringToCards (char* cardsString, struct card_t* cards)
 	return cards;
 }
 
+__declspec(dllexport)
 char* CardToString (struct card_t* card, char* destination)
 {
 	destination[0] = ToRankString (card->rank);

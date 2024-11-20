@@ -31,7 +31,6 @@ struct eval_t
 	int nBoardCards;                                 // How many cards over the board.
 	int nHoleCards;                                  // How many hole cards per player.
 	int nDeadCards;                                  // How many dead cards.
-	int nCores;                                      // How many CPUs in the system.
 	int nBoards;                                     // Returned total boards evaluated.
 	enum rules_t rules;                              // Poker rules used for evaluation.
 	struct card_t boardCards[BOARD_SIZE];            // Cards over the board.
