@@ -1,7 +1,5 @@
-#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <stdarg.h>
 #include "poker.h"
 #include "enum.h"
@@ -9,17 +7,15 @@
 #include "misc.h"
 #include "fsm.h"
 #include "thrdfnc.h"
+#include "testing.h"
 
 #ifdef DEBUG
 #include "debug.h"
 #endif
 
-#define BUFFER_SIZE 10000
-#define SCREEN_COLUMNS 80
-#define PASSED_MSG "PASSED"
-#define FAILED_MSG "FAILED"
+#define EPSILON .005
 
-struct eq_t
+struct data_t
 {
 	int wins;
 	int loses;
@@ -28,62 +24,6 @@ struct eq_t
 	double eqLose;
 	double eqTie;
 };
-
-bool CompareStrings (void* value1, void* value2, int length)
-{
-	char* v1 = (char*) value1;
-	char* v2 = (char*) value2;
-
-	if (v1 == NULL)
-	{
-		return v2 == NULL;
-	}
-	else if (v2 == NULL)
-	{
-		return false;
-	}
-
-	int i = 0;
-
-	while (v1[i] == v2[i] && v1[i] != '\0')
-	{
-		++i;
-	}
-
-	return v1[i] == v2[i];
-}
-
-bool CompareInts (void* value1, void* value2, int length)
-{
-	int* v1 = (int*) value1;
-	int* v2 = (int*) value2;
-
-	for (int i = 0; i < length; i++)
-	{
-		if (v1[i] != v2[i]) return false;
-	}
-
-	return true;
-}
-
-void Print (void* expected, void* actual, int length, bool (*compare)(void*, void*, int), char* format, ...)
-{
-	char buffer[SCREEN_COLUMNS];
-	va_list valist;
-
-	memset (buffer, 0, SCREEN_COLUMNS);
-
-    va_start (valist, format);
-    int written = vsnprintf (buffer, SCREEN_COLUMNS, format, valist);
-    va_end (valist);
-
-	if (written < 0 || written >= SCREEN_COLUMNS)
-	{
-		return;
-	}
-
-	printf ("%s%*s\n", buffer, SCREEN_COLUMNS - strlen (buffer), compare (expected, actual, length) ? PASSED_MSG : FAILED_MSG);
-}
 
 void HandRankTest (char* boardString, enum hand_rank_t hr)
 {
@@ -98,7 +38,7 @@ void HandRankTest (char* boardString, enum hand_rank_t hr)
 
 	HandRank (board, &result);
 
-	Print (&hr, &result.handRank, 1, CompareInts, "Board: %s. Expected: %s. Actual: %s",
+	PrintInt (hr, result.handRank, "Board: %s. Expected: %s. Actual: %s",
 		boardString, HandRankToString (hr), HandRankToString (result.handRank));
 }
 
@@ -123,15 +63,29 @@ void CompareTest (char* boardString1, char* boardString2, int expected)
 
 	int actual = Compare (board1, board2);
 
-	Print (&expected, &actual, 1, CompareInts, "1st. board: %s. 2nd. board: %s. Expected: %d. Actual: %d",
+	PrintInt (expected, actual, "1st. board: %s. 2nd. board: %s. Expected: %d. Actual: %d",
 		boardString1, boardString2, expected, actual);
+}
+
+bool CompareEquities (void* expected, void* actual)
+{
+	struct data_t* eData = (struct data_t*) expected;
+	struct data_t* aData = (struct data_t*) actual;
+
+	return eData->wins == aData->wins
+		&& eData->loses == aData->loses
+		&& eData->ties == aData->ties
+		&& eData->eqWin - EPSILON <= aData->eqWin && aData->eqWin <= eData->eqWin + EPSILON
+		&& eData->eqLose - EPSILON <= aData->eqLose && aData->eqLose <= eData->eqLose + EPSILON
+		&& eData->eqTie - EPSILON <= aData->eqTie && aData->eqTie <= eData->eqTie + EPSILON;
 }
 
 void EvalTest (enum rules_t rules, int nPlayers, char* boardCards, char* deadCards, ...)
 {
 	va_list valist;
 	struct eval_t evalData;
-	struct eq_t equities[MAX_PLAYERS];
+	struct data_t data[MAX_PLAYERS];
+	struct data_t actual;
 	char cardBuffer[3];
 
 	evalData.rules = rules;
@@ -159,12 +113,12 @@ void EvalTest (enum rules_t rules, int nPlayers, char* boardCards, char* deadCar
 
 	for (int i = 0; i < nPlayers; i++)
 	{
-		equities[i].wins = va_arg (valist, int);
-		equities[i].loses = va_arg (valist, int);
-		equities[i].ties = va_arg (valist, int);
-		equities[i].eqWin = va_arg (valist, double);
-		equities[i].eqLose = va_arg (valist, double);
-		equities[i].eqTie = va_arg (valist, double);
+		data[i].wins = va_arg (valist, int);
+		data[i].loses = va_arg (valist, int);
+		data[i].ties = va_arg (valist, int);
+		data[i].eqWin = va_arg (valist, double);
+		data[i].eqLose = va_arg (valist, double);
+		data[i].eqTie = va_arg (valist, double);
 	}
 
 	va_end (valist);
@@ -200,11 +154,35 @@ void EvalTest (enum rules_t rules, int nPlayers, char* boardCards, char* deadCar
 	{
 		int loses = evalData.nBoards - evalData.equities[i].wins - evalData.equities[i].ties;
 
-		printf ("[Expected W/L/T - Eq W/L/T] [Actual W/L/T - Eq W/L/T]: [%i/%i/%i - %2.2f/%2.2f/%2.2f] [%i/%i/%i - %2.2f/%2.2f/%2.2f]\n", \
-			equities[i].wins, equities[i].loses, equities[i].ties, equities[i].eqWin, equities[i].eqLose, equities[i].eqTie, \
-			evalData.equities[i].wins, loses, evalData.equities[i].ties, \
-			evalData.equities[i].winProbability * 100.0d, evalData.equities[i].loseProbability * 100.0d, \
-			evalData.equities[i].tieProbability * 100.0d);
+		evalData.equities[i].winProbability *= 100.0d;
+		evalData.equities[i].loseProbability *= 100.0d;
+		evalData.equities[i].tieProbability *= 100.0d;
+
+		actual.wins = evalData.equities[i].wins;
+		actual.loses = loses;
+		actual.ties = evalData.equities[i].ties;
+		actual.eqWin = evalData.equities[i].winProbability;
+		actual.eqLose = evalData.equities[i].loseProbability;
+		actual.eqTie = evalData.equities[i].tieProbability;
+
+		PrintAny (
+			&data[i],
+			&actual,
+			CompareEquities,
+			"Expected: %i/%i/%i (%2.2f/%2.2f/%2.2f) Actual: %i/%i/%i (%2.2f/%2.2f/%2.2f)",
+			data[i].wins,
+			data[i].loses,
+			data[i].ties,
+			data[i].eqWin,
+			data[i].eqLose,
+			data[i].eqTie,
+			evalData.equities[i].wins,
+			loses,
+			evalData.equities[i].ties,
+			evalData.equities[i].winProbability,
+			evalData.equities[i].loseProbability,
+			evalData.equities[i].tieProbability
+			);
 	}
 }
 
@@ -230,7 +208,7 @@ void IndexInitializationTest (int* indexes, int nIndexes, int nCombinations, int
 
 	va_end (valist);
 
-	Print (expected, indexes, BOARD_SIZE, CompareInts, "Expected: %d-%d-%d-%d-%d. Actual: %d-%d-%d-%d-%d",
+	PrintInts (expected, indexes, BOARD_SIZE, "Expected: %d-%d-%d-%d-%d. Actual: %d-%d-%d-%d-%d",
 		expected[4], expected[3], expected[2], expected[1], expected[0], indexes[4], indexes[3], indexes[2], indexes[1], indexes[0]);
 }
 #endif
@@ -377,6 +355,34 @@ void EvalTests ()
 	EvalTest (HOLDEM, 10, "2s3sJh", NULL, "9s9h", "6c4c", "As7s", "Ah5h", "QsTc", "Ac9c", "7c2d", "QdAd", "5cTs", "6d5s", 86, 320, 0, 21.18d, 78.82d, 0.00d, 21, 383, 2, 5.17d, 94.33d, 0.49d, 124, 282, 0, 30.54d, 69.46d, 0.00d, 34, 371, 1, 8.37d, 91.38d, 0.25d, 25, 381, 0, 6.16d, 93.84d, 0.00d, 0, 406, 0, 0.00d, 100.00d, 0.00d, 52, 354, 0, 12.81d, 87.19d, 0.00d, 26, 380, 0, 6.40d, 93.60d, 0.00d, 0, 405, 1, 0.00d, 99.75d, 0.25d, 35, 368, 3, 8.62d, 90.64d, 0.74d);
 	EvalTest (HOLDEM, 10, "2c4d8h7d", NULL, "3d5d", "6h3c", "KhJc", "Th2h", "Kd3h", "Qc8c", "4sTd", "Qh8d", "8sJs", "7hKc", 11, 17, 0, 39.29d, 60.71d, 0.00d, 3, 25, 0, 10.71d, 89.29d, 0.00d, 0, 28, 0, 0.00d, 100.00d, 0.00d, 1, 27, 0, 3.57d, 96.43d, 0.00d, 0, 28, 0, 0.00d, 100.00d, 0.00d, 0, 23, 5, 0.00d, 82.14d, 17.86d, 4, 24, 0, 14.29d, 85.71d, 0.00d, 0, 23, 5, 0.00d, 82.14d, 17.86d, 1, 27, 0, 3.57d, 96.43d, 0.00d, 3, 25, 0, 10.71d, 89.29d, 0.00d);
 	EvalTest (HOLDEM, 10, "9dJd6sKs4h", NULL, "Jc2h", "2c8s", "4c4s", "Qs8h", "AcJs", "4dJh", "3s3c", "2d3d", "Kc9s", "TcKd", 0, 1, 0, 0.00d, 100.00d, 0.00d, 0, 1, 0, 0.00d, 100.00d, 0.00d, 1, 0, 0, 100.00d, 0.00d, 0.00d, 0, 1, 0, 0.00d, 100.00d, 0.00d, 0, 1, 0, 0.00d, 100.00d, 0.00d, 0, 1, 0, 0.00d, 100.00d, 0.00d, 0, 1, 0, 0.00d, 100.00d, 0.00d, 0, 1, 0, 0.00d, 100.00d, 0.00d, 0, 1, 0, 0.00d, 100.00d, 0.00d, 0, 1, 0, 0.00d, 100.00d, 0.00d);
+
+	EvalTest (OMAHA, 2, "Kc5h9c", NULL, "6d2s9hKd", "TdAhThJh", 558, 262, 0, 68.05d, 31.95d, 0.00d, 262, 558, 0, 31.95d, 68.05d, 0.00d);
+	EvalTest (OMAHA, 2, "QsJcKs9s", NULL, "Jd3s6cTs", "Tc7h5s5d", 40, 0, 0, 100.00d, 0.00d, 0.00d, 0, 40, 0, 0.00d, 100.00d, 0.00d);
+	EvalTest (OMAHA, 2, "3d2h7c4c4s", NULL, "3h6s6h8s", "3c7sJs9d", 0, 1, 0, 0.00d, 100.00d, 0.00d, 1, 0, 0, 100.00d, 0.00d, 0.00d);
+	EvalTest (OMAHA, 3, "2cAc5c", NULL, "8hAd4d4h", "8cQdKhAs", "7dQc8d2d", 208, 435, 23, 31.23d, 65.32d, 3.45d, 315, 328, 23, 47.30d, 49.25d, 3.45d, 120, 546, 0, 18.02d, 81.98d, 0.00d);
+	EvalTest (OMAHA, 3, "QhTcQsKh", NULL, "9sKdTh4d", "KcAc6c4c", "Jd9h8d6d", 3, 33, 0, 8.33d, 91.67d, 0.00d, 3, 33, 0, 8.33d, 91.67d, 0.00d, 30, 6, 0, 83.33d, 16.67d, 0.00d);
+	EvalTest (OMAHA, 3, "7d5d9c2sAh", NULL, "Ks9dJh3c", "8c8sJc8h", "Js3d7cAd", 0, 1, 0, 0.00d, 100.00d, 0.00d, 0, 1, 0, 0.00d, 100.00d, 0.00d, 1, 0, 0, 100.00d, 0.00d, 0.00d);
+	EvalTest (OMAHA, 4, "4h4s3h", NULL, "6s3s2dQd", "2c5cTd7s", "TsQc2h5h", "7h5s6hAs", 99, 427, 2, 18.75d, 80.87d, 0.38d, 0, 447, 81, 0.00d, 84.66d, 15.34d, 53, 438, 37, 10.04d, 82.95d, 7.01d, 293, 189, 46, 55.49d, 35.80d, 8.71d);
+	EvalTest (OMAHA, 4, "Ac6c7hKc", NULL, "Ts9hTh6h", "5hTc6d5d", "Ks4c7d2s", "QcQhQdAs", 5, 26, 1, 15.62d, 81.25d, 3.12d, 2, 29, 1, 6.25d, 90.62d, 3.12d, 21, 11, 0, 65.62d, 34.38d, 0.00d, 3, 29, 0, 9.38d, 90.62d, 0.00d);
+	EvalTest (OMAHA, 4, "Jd4h8dJc7c", NULL, "8h4d4s3h", "9dJhKdTd", "2h3cQsAh", "2c6s3s3d", 1, 0, 0, 100.00d, 0.00d, 0.00d, 0, 1, 0, 0.00d, 100.00d, 0.00d, 0, 1, 0, 0.00d, 100.00d, 0.00d, 0, 1, 0, 0.00d, 100.00d, 0.00d);
+	EvalTest (OMAHA, 5, "AdKh9c", NULL, "Js2d8c5s", "8s9s7s5c", "9h5h2c6s", "Ah4hTcAc", "JcTsThTd", 0, 388, 18, 0.00d, 95.57d, 4.43d, 8, 391, 7, 1.97d, 96.31d, 1.72d, 0, 395, 11, 0.00d, 97.29d, 2.71d, 305, 94, 7, 75.12d, 23.15d, 1.72d, 68, 331, 7, 16.75d, 81.53d, 1.72d);
+	EvalTest (OMAHA, 5, "3h8d6d7d", NULL, "Kc2h3d3s", "QsKs9dJh", "As3c6hQd", "4s5dQc6c", "4dKd4c7h", 5, 23, 0, 17.86d, 82.14d, 0.00d, 0, 28, 0, 0.00d, 100.00d, 0.00d, 1, 27, 0, 3.57d, 96.43d, 0.00d, 0, 28, 0, 0.00d, 100.00d, 0.00d, 22, 6, 0, 78.57d, 21.43d, 0.00d);
+	EvalTest (OMAHA, 5, "7cJdQh2s8h", NULL, "9hKdTs5c", "3dTc5d4d", "7sJs2c2d", "JhQs4h7d", "Kc9s8s4c", 1, 0, 0, 100.00d, 0.00d, 0.00d, 0, 1, 0, 0.00d, 100.00d, 0.00d, 0, 1, 0, 0.00d, 100.00d, 0.00d, 0, 1, 0, 0.00d, 100.00d, 0.00d, 0, 1, 0, 0.00d, 100.00d, 0.00d);
+	EvalTest (OMAHA, 6, "7h6cKh", NULL, "3cAs2hQd", "JcKsAh8d", "9c6h4s6s", "Th5sQc8c", "9d5hTd6d", "Ad3h3sAc", 6, 294, 0, 2.00d, 98.00d, 0.00d, 23, 277, 0, 7.67d, 92.33d, 0.00d, 154, 141, 5, 51.33d, 47.00d, 1.67d, 70, 226, 4, 23.33d, 75.33d, 1.33d, 35, 256, 9, 11.67d, 85.33d, 3.00d, 3, 297, 0, 1.00d, 99.00d, 0.00d);
+	EvalTest (OMAHA, 6, "Tc7h4s8h", NULL, "Qh6d2sJc", "9sAs9hTh", "6h3c5hTd", "2dQs7dQd", "3dJd7s5d", "Ks6cAc8s", 2, 22, 0, 8.33d, 91.67d, 0.00d, 7, 17, 0, 29.17d, 70.83d, 0.00d, 13, 9, 2, 54.17d, 37.50d, 8.33d, 0, 24, 0, 0.00d, 100.00d, 0.00d, 0, 24, 0, 0.00d, 100.00d, 0.00d, 0, 22, 2, 0.00d, 91.67d, 8.33d);
+	EvalTest (OMAHA, 6, "8d4dJhJs9c", NULL, "3hKh5cQc", "5s7cKd2c", "9d2h4h8c", "Kc6s3sAh", "4cAdTsJd", "Td7s7dTc", 0, 1, 0, 0.00d, 100.00d, 0.00d, 0, 1, 0, 0.00d, 100.00d, 0.00d, 0, 1, 0, 0.00d, 100.00d, 0.00d, 0, 1, 0, 0.00d, 100.00d, 0.00d, 1, 0, 0, 100.00d, 0.00d, 0.00d, 0, 1, 0, 0.00d, 100.00d, 0.00d);
+	EvalTest (OMAHA, 7, "5d2d6h", NULL, "2s3dQdJc", "Th9hAs6c", "QhQs8h3c", "6d9s8s7h", "AcKs5h4s", "4dJhQcJs", "4c6s8d7d", 90, 120, 0, 42.86d, 57.14d, 0.00d, 8, 201, 1, 3.81d, 95.71d, 0.48d, 9, 201, 0, 4.29d, 95.71d, 0.00d, 36, 152, 22, 17.14d, 72.38d, 10.48d, 29, 181, 0, 13.81d, 86.19d, 0.00d, 4, 206, 0, 1.90d, 98.10d, 0.00d, 12, 177, 21, 5.71d, 84.29d, 10.00d);
+	EvalTest (OMAHA, 7, "2hKhTdKc", NULL, "2cKd5c3s", "Tc9d8c5s", "Ah9c4hAd", "Ts7c7s3h", "JdQh6c8s", "2d4c8hJh", "Th3d7hJc", 18, 2, 0, 90.00d, 10.00d, 0.00d, 0, 20, 0, 0.00d, 100.00d, 0.00d, 2, 18, 0, 10.00d, 90.00d, 0.00d, 0, 20, 0, 0.00d, 100.00d, 0.00d, 0, 20, 0, 0.00d, 100.00d, 0.00d, 0, 20, 0, 0.00d, 100.00d, 0.00d, 0, 20, 0, 0.00d, 100.00d, 0.00d);
+	EvalTest (OMAHA, 7, "8dQdAsQc2s", NULL, "6h5h4d7d", "Ac6s5d9h", "9sQsKsJs", "4s3c6dTh", "2c5s9cAh", "3h7c8c9d", "KdJdTsKc", 0, 1, 0, 0.00d, 100.00d, 0.00d, 0, 1, 0, 0.00d, 100.00d, 0.00d, 1, 0, 0, 100.00d, 0.00d, 0.00d, 0, 1, 0, 0.00d, 100.00d, 0.00d, 0, 1, 0, 0.00d, 100.00d, 0.00d, 0, 1, 0, 0.00d, 100.00d, 0.00d, 0, 1, 0, 0.00d, 100.00d, 0.00d);
+	EvalTest (OMAHA, 8, "Td4c3s", NULL, "5cJcAdJh", "7s4hKh8s", "3dTc2d6c", "8hQh7h2h", "8dAc6sAs", "9sKsQdAh", "Js5sTh2s", "5d6d8cQs", 16, 120, 0, 11.76d, 88.24d, 0.00d, 18, 114, 4, 13.24d, 83.82d, 2.94d, 50, 85, 1, 36.76d, 62.50d, 0.74d, 0, 132, 4, 0.00d, 97.06d, 2.94d, 0, 130, 6, 0.00d, 95.59d, 4.41d, 13, 123, 0, 9.56d, 90.44d, 0.00d, 7, 128, 1, 5.15d, 94.12d, 0.74d, 20, 108, 8, 14.71d, 79.41d, 5.88d);
+	EvalTest (OMAHA, 8, "3c9cJdKd", NULL, "Qc7d4d2c", "6h7c4sTs", "Kc9h5h3h", "9dTdQhAc", "8c2dJc3s", "4hQs5cTc", "7h3dAdTh", "Kh9s4c6d", 1, 15, 0, 6.25d, 93.75d, 0.00d, 0, 16, 0, 0.00d, 100.00d, 0.00d, 0, 15, 1, 0.00d, 93.75d, 6.25d, 1, 6, 9, 6.25d, 37.50d, 56.25d, 2, 14, 0, 12.50d, 87.50d, 0.00d, 0, 7, 9, 0.00d, 43.75d, 56.25d, 2, 14, 0, 12.50d, 87.50d, 0.00d, 0, 15, 1, 0.00d, 93.75d, 6.25d);
+	EvalTest (OMAHA, 8, "8d6sKsAh8s", NULL, "2s7sQd8h", "Js2h5dAs", "Jh5s6cJc", "4c8cQcTs", "Kd2d4h2c", "7cQs9c4d", "Jd3dThTc", "QhKcTd9h", 0, 1, 0, 0.00d, 100.00d, 0.00d, 1, 0, 0, 100.00d, 0.00d, 0.00d, 0, 1, 0, 0.00d, 100.00d, 0.00d, 0, 1, 0, 0.00d, 100.00d, 0.00d, 0, 1, 0, 0.00d, 100.00d, 0.00d, 0, 1, 0, 0.00d, 100.00d, 0.00d, 0, 1, 0, 0.00d, 100.00d, 0.00d, 0, 1, 0, 0.00d, 100.00d, 0.00d);
+	EvalTest (OMAHA, 9, "9s7h3s", NULL, "6h7d5c9d", "6dKhAd3c", "3h4sAc5h", "4c7c8dKd", "TsTdJh8h", "Th9c2h2s", "6cJcQdAh", "KcJs9hQc", "4d4h2cJd", 11, 67, 0, 14.10d, 85.90d, 0.00d, 3, 72, 3, 3.85d, 92.31d, 3.85d, 5, 70, 3, 6.41d, 89.74d, 3.85d, 2, 76, 0, 2.56d, 97.44d, 0.00d, 34, 44, 0, 43.59d, 56.41d, 0.00d, 4, 74, 0, 5.13d, 94.87d, 0.00d, 2, 73, 3, 2.56d, 93.59d, 3.85d, 9, 66, 3, 11.54d, 84.62d, 3.85d, 2, 76, 0, 2.56d, 97.44d, 0.00d);
+	EvalTest (OMAHA, 9, "5d3dKsTc", NULL, "8sAs2d8c", "5s6sQhQs", "7s7h9h8d", "QdJc8h3s", "Jh7c5h4h", "9d5c7d4d", "Jd3c6h2h", "9c6d2cAc", "Ad6cQc9s", 0, 12, 0, 0.00d, 100.00d, 0.00d, 4, 8, 0, 33.33d, 66.67d, 0.00d, 0, 12, 0, 0.00d, 100.00d, 0.00d, 2, 10, 0, 16.67d, 83.33d, 0.00d, 0, 12, 0, 0.00d, 100.00d, 0.00d, 2, 10, 0, 16.67d, 83.33d, 0.00d, 1, 9, 2, 8.33d, 75.00d, 16.67d, 0, 10, 2, 0.00d, 83.33d, 16.67d, 1, 11, 0, 8.33d, 91.67d, 0.00d);
+	EvalTest (OMAHA, 9, "2sKcAhJsTh", NULL, "Ts4cKdTd", "4sKh3h9s", "8sTcQs6d", "5dJd2d2h", "5hAdAc8d", "7dQc6h5c", "Jc3d9cKs", "6cJh9h7s", "9d5s4dAs", 0, 1, 0, 0.00d, 100.00d, 0.00d, 0, 1, 0, 0.00d, 100.00d, 0.00d, 1, 0, 0, 100.00d, 0.00d, 0.00d, 0, 1, 0, 0.00d, 100.00d, 0.00d, 0, 1, 0, 0.00d, 100.00d, 0.00d, 0, 1, 0, 0.00d, 100.00d, 0.00d, 0, 1, 0, 0.00d, 100.00d, 0.00d, 0, 1, 0, 0.00d, 100.00d, 0.00d, 0, 1, 0, 0.00d, 100.00d, 0.00d);
+	EvalTest (OMAHA, 10, "3c7h7c", NULL, "8h8c2cQh", "Qd6s3s4h", "9dTsQs9c", "3hTdKhKc", "4d2d3dAd", "2sAs2h5d", "4sAh6hJs", "9sKd8d4c", "AcTcTh6d", "5c5sJd9h", 7, 29, 0, 19.44d, 80.56d, 0.00d, 0, 36, 0, 0.00d, 100.00d, 0.00d, 0, 36, 0, 0.00d, 100.00d, 0.00d, 19, 17, 0, 52.78d, 47.22d, 0.00d, 0, 36, 0, 0.00d, 100.00d, 0.00d, 0, 36, 0, 0.00d, 100.00d, 0.00d, 0, 36, 0, 0.00d, 100.00d, 0.00d, 0, 36, 0, 0.00d, 100.00d, 0.00d, 6, 30, 0, 16.67d, 83.33d, 0.00d, 4, 32, 0, 11.11d, 88.89d, 0.00d);
+	EvalTest (OMAHA, 10, "8sKsQc6c", NULL, "7sJc7dJh", "5h5c8h7c", "Td2d5s6d", "Ad2sTsTc", "KdQh3c6h", "8c5dQdTh", "4h9h6s9d", "3d2c7h4d", "AhAc9sKc", "8d3s3hJs", 0, 8, 0, 0.00d, 100.00d, 0.00d, 0, 8, 0, 0.00d, 100.00d, 0.00d, 0, 8, 0, 0.00d, 100.00d, 0.00d, 1, 7, 0, 12.50d, 87.50d, 0.00d, 3, 5, 0, 37.50d, 62.50d, 0.00d, 0, 8, 0, 0.00d, 100.00d, 0.00d, 0, 8, 0, 0.00d, 100.00d, 0.00d, 0, 8, 0, 0.00d, 100.00d, 0.00d, 2, 6, 0, 25.00d, 75.00d, 0.00d, 2, 6, 0, 25.00d, 75.00d, 0.00d);
+	EvalTest (OMAHA, 10, "4cKhAs4sJd", NULL, "9c2hQs7c", "KcJh3c2s", "JsAcTd5h", "8d9s6d6c", "3h9dQh8s", "Ks7s5s4h", "8cJcAdQc", "Th7hTc3s", "Ts2c7d2d", "5d4d6h6s", 0, 1, 0, 0.00d, 100.00d, 0.00d, 0, 1, 0, 0.00d, 100.00d, 0.00d, 0, 1, 0, 0.00d, 100.00d, 0.00d, 0, 1, 0, 0.00d, 100.00d, 0.00d, 0, 1, 0, 0.00d, 100.00d, 0.00d, 1, 0, 0, 100.00d, 0.00d, 0.00d, 0, 1, 0, 0.00d, 100.00d, 0.00d, 0, 1, 0, 0.00d, 100.00d, 0.00d, 0, 1, 0, 0.00d, 100.00d, 0.00d, 0, 1, 0, 0.00d, 100.00d, 0.00d);
 }
 
 int main ()
