@@ -12,8 +12,8 @@
 
 #ifdef LIN
 #include <pthread.h>
-#define THREAD_FUNC_RET_TYPE void
-#define THREAD_FUNC_PROTO void (*thread_function)(void *)
+#define THREAD_FUNC_RET_TYPE void*
+#define THREAD_FUNC_PROTO void* (*thread_function)(void *)
 #define thread_id_t pthread_t
 #endif
 

@@ -1,0 +1,90 @@
+CC=gcc
+INCLUDE=-Iinc
+SRCDIR=src
+BINDIR=bin
+OBJDIR=obj
+TESTSOBJDIRS="$(OBJDIR)/tests.o" "$(OBJDIR)/eval.o" "$(OBJDIR)/misc.o" "$(OBJDIR)/fsm.o" \
+"$(OBJDIR)/cmbntn.o" "$(OBJDIR)/thrdfnc.o" "$(OBJDIR)/core.o" "$(OBJDIR)/thread.o" \
+"$(OBJDIR)/testing.o"
+COMBSOBJDIRS="$(OBJDIR)/combs.o" "$(OBJDIR)/cmbntn.o"
+LIBOBJSDIRS="$(OBJDIR)/eval.o" "$(OBJDIR)/misc.o" "$(OBJDIR)/fsm.o" "$(OBJDIR)/cmbntn.o" \
+"$(OBJDIR)/thrdfnc.o" "$(OBJDIR)/core.o" "$(OBJDIR)/thread.o"
+PEVALOBJDIRS="$(OBJDIR)/peval.o"
+TESTSOBJS=tests.o eval.o misc.o fsm.o cmbntn.o thrdfnc.o core.o thread.o testing.o
+COMBSOBJS=combs.o cmbntn.o
+LIBOBJS=eval.o misc.o fsm.o cmbntn.o thrdfnc.o core.o thread.o
+PEVALOBJS=peval.o
+BINS=tests combs lib peval
+CFLAGS=$(INCLUDE) -DLIN -fpic
+TESTSLDFLAGS=-lpthread
+COMBSLDFLAGS=
+LIBLDFLAGS=-shared -O -lpthread
+PEVALLDFLAGS=-O
+
+ifdef DEBUG
+CFLAGS+=-g -DDEBUG
+TESTSOBJDIRS+="$(OBJDIR)/debug.o"
+COMBSOBJDIRS+="$(OBJDIR)/debug.o" "$(OBJDIR)/misc.o"
+PEVALOBJDIRS+="$(OBJDIR)/debug.o"
+TESTSOBJS+=debug.o
+COMBSOBJS+=debug.o misc.o
+PEVALOBJS+=debug.o
+else
+LIBLDFLAGS+=-s
+PEVALLDFLAGS+=-s
+endif
+
+all: $(BINS)
+
+tests.o:
+	$(CC) $(CFLAGS) -c $(SRCDIR)/tests.c -o $(OBJDIR)/tests.o
+
+combs.o:
+	$(CC) $(CFLAGS) -c $(SRCDIR)/combs.c -o $(OBJDIR)/combs.o
+
+eval.o:
+	$(CC) $(CFLAGS) -c $(SRCDIR)/eval.c -o $(OBJDIR)/eval.o
+
+misc.o:
+	$(CC) $(CFLAGS) -c $(SRCDIR)/misc.c -o $(OBJDIR)/misc.o
+
+fsm.o:
+	$(CC) $(CFLAGS) -c $(SRCDIR)/fsm.c -o $(OBJDIR)/fsm.o
+
+cmbntn.o:
+	$(CC) $(CFLAGS) -c $(SRCDIR)/cmbntn.c -o $(OBJDIR)/cmbntn.o
+
+thrdfnc.o:
+	$(CC) $(CFLAGS) -c $(SRCDIR)/thrdfnc.c -o $(OBJDIR)/thrdfnc.o
+
+core.o:
+	$(CC) $(CFLAGS) -c $(SRCDIR)/lin/core.c -o $(OBJDIR)/core.o
+
+thread.o:
+	$(CC) $(CFLAGS) -c $(SRCDIR)/lin/thread.c -o $(OBJDIR)/thread.o
+
+testing.o:
+	$(CC) $(CFLAGS) -c $(SRCDIR)/testing.c -o $(OBJDIR)/testing.o
+
+debug.o:
+	$(CC) $(CFLAGS) -c $(SRCDIR)/debug.c -o $(OBJDIR)/debug.o
+
+peval.o:
+	$(CC) $(CFLAGS) -c $(SRCDIR)/peval.c -o $(OBJDIR)/peval.o
+
+tests: $(TESTSOBJS)
+	$(CC) $(TESTSOBJS:%.o=$(OBJDIR)/%.o) -o $(BINDIR)/tests $(TESTSLDFLAGS)
+
+combs: $(COMBSOBJS)
+	$(CC) $(COMBSOBJS:%.o=$(OBJDIR)/%.o) -o $(BINDIR)/combs $(COMBSLDFLAGS)
+
+lib: $(LIBOBJS)
+	$(CC) $(LIBOBJS:%.o=$(OBJDIR)/%.o) -o $(BINDIR)/eval.so $(LIBLDFLAGS)
+
+peval: $(PEVALOBJS)
+	$(CC) $(PEVALOBJS:%.o=$(OBJDIR)/%.o) -o $(BINDIR)/peval $(BINDIR)/eval.so $(PEVALLDFLAGS)
+
+.PHONY: clean
+clean:
+	rm $(OBJDIR)/*.* $(BINDIR)/*.*
+

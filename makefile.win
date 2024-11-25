@@ -86,3 +86,4 @@ peval: $(PEVALOBJS)
 
 clean:
 	del /F /Q "$(OBJDIR)\*.*" "$(BINDIR)\*.*"
+

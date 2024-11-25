@@ -132,7 +132,9 @@ void FreeThreadInfo (thread_id_t* threadIds, struct thread_args_t* threadArgs, i
 	}
 }
 
+#ifdef WIN
 __declspec(dllexport)
+#endif
 bool Eval (struct eval_t* evalData)
 {
 	struct card_t deck[DECK_SIZE];
