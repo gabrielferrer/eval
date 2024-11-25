@@ -1,8 +1,8 @@
 #include "thread.h"
 
-thread_id_t TH_CreateThread (THREAD_FUNC_PROTO, void* args)
+bool TH_CreateThread (THREAD_FUNC_PROTO, void* args, thread_id_t* threadId)
 {
-	return CreateThread (NULL, 0, thread_function, args, 0, NULL);
+	return CreateThread (NULL, 0, thread_function, args, 0, NULL) != NULL;
 }
 
 void TH_DisposeThread (thread_id_t id)

@@ -125,10 +125,7 @@ void FreeThreadInfo (thread_id_t* threadIds, struct thread_args_t* threadArgs, i
 	{
 		for (int i = 0; i < nThreads; i++)
 		{
-			if (VALID_THREAD_ID(threadIds[i]))
-			{
-				TH_DisposeThread (threadIds[i]);
-			}
+			TH_DisposeThread (threadIds[i]);
 		}
 
 		free (threadIds);
@@ -287,9 +284,7 @@ bool Eval (struct eval_t* evalData)
 		threadArgs[0].nCombinations = 0;
 		threadArgs[0].nCombinationCards = combinationSize;
 
-		threadIds[0] = TH_CreateThread (ThreadFunction, threadArgs);
-
-		if (!VALID_THREAD_ID(threadIds[0]))
+		if (!TH_CreateThread (ThreadFunction, threadArgs, &threadIds[0]))
 		{
 			evalData->errors |= INTERNAL_ERROR;
 
@@ -342,9 +337,7 @@ bool Eval (struct eval_t* evalData)
 #endif
 			nCombinations -= threadArgs[i].nCombinations;
 
-			threadIds[i] = TH_CreateThread (ThreadFunction, &threadArgs[i]);
-
-			if (!VALID_THREAD_ID(threadIds[i]))
+			if (!TH_CreateThread (ThreadFunction, &threadArgs[i], &threadIds[i]))
 			{
 				evalData->errors |= INTERNAL_ERROR;
 
