@@ -2,12 +2,12 @@
 
 <b>Compile on Linux</b>
 
- * Library:         make -fmakefile.lin lib
- * Evaluation tool: make -fmakefile.lin peval
- * Tests:           make -fmakefile.lin tests
+ * Library:         <i>make -fmakefile.lin lib</i>
+ * Evaluation tool: <i>make -fmakefile.lin peval</i>
+ * Tests:           <i>make -fmakefile.lin tests</i>
 
 <b>Compile on Windows</b>
 
- * Library:         make -fmakefile.win dll
- * Evaluation tool: make -fmakefile.win peval
- * Tests:           make -fmakefile.win tests
+ * Library:         <i>make -fmakefile.win dll</i>
+ * Evaluation tool: <i>make -fmakefile.win peval</i>
+ * Tests:           <i>make -fmakefile.win tests</i>
