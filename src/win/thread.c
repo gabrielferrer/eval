@@ -2,7 +2,9 @@
 
 bool TH_CreateThread (THREAD_FUNC_PROTO, void* args, thread_id_t* threadId)
 {
-	return CreateThread (NULL, 0, thread_function, args, 0, NULL) != NULL;
+	*threadId = CreateThread (NULL, 0, thread_function, args, 0, NULL);
+	
+	return *threadId != NULL;
 }
 
 void TH_DisposeThread (thread_id_t id)

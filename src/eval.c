@@ -334,9 +334,9 @@ bool Eval (struct eval_t* evalData)
 			threadArgs[i].nCombinationCards = combinationSize;
 
 			InitializeIndexes (threadArgs[i].indexes, combinationSize, nCombinations, nCards);
-#ifdef DEBUG
-			D_WriteThreadArguments (&threadArgs[i], nCombinations, "C:\\Users\\Gabriel\\Desktop\\threadargs.txt");
-#endif
+//#ifdef DEBUG
+//			D_WriteThreadArguments (&threadArgs[i], nCombinations, "C:\\Users\\Gabriel\\Desktop\\threadargs.txt");
+//#endif
 			nCombinations -= threadArgs[i].nCombinations;
 
 			if (!TH_CreateThread (ThreadFunction, &threadArgs[i], &threadIds[i]))

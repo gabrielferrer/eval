@@ -556,9 +556,9 @@ THREAD_FUNC_RET_TYPE ThreadFunction (void* args)
 				--context.nCombinations;
 			}
 			while (!done && context.nPageEntries < PAGE_SIZE && context.nCombinations > 0);
-#ifdef DEBUG
-			D_WriteBoards (context.boardsPage, context.nPageEntries, "C:\\Users\\Gabriel\\Desktop\\eval\\boards-%d.txt", context.threadNr);
-#endif
+//#ifdef DEBUG
+//			D_WriteBoards (context.boardsPage, context.nPageEntries, "C:\\Users\\Gabriel\\Desktop\\eval\\boards-%d.txt", context.threadNr);
+//#endif
 			EvalPlayers (&context);
 		}
 		while (!done && context.nCombinations > 0);
