@@ -19,7 +19,7 @@ CFLAGS=$(INCLUDE) -DLIN -fpic
 TESTSLDFLAGS=-lpthread
 COMBSLDFLAGS=
 LIBLDFLAGS=-shared -O -lpthread
-PEVALLDFLAGS=-O
+PEVALLDFLAGS=-L./bin -O -leval -Wl,-rpath=./
 
 ifdef DEBUG
 CFLAGS+=-g -DDEBUG
@@ -79,12 +79,12 @@ combs: $(COMBSOBJS)
 	$(CC) $(COMBSOBJS:%.o=$(OBJDIR)/%.o) -o $(BINDIR)/combs $(COMBSLDFLAGS)
 
 lib: $(LIBOBJS)
-	$(CC) $(LIBOBJS:%.o=$(OBJDIR)/%.o) -o $(BINDIR)/eval.so $(LIBLDFLAGS)
+	$(CC) $(LIBOBJS:%.o=$(OBJDIR)/%.o) -o $(BINDIR)/libeval.so $(LIBLDFLAGS)
 
 peval: $(PEVALOBJS)
-	$(CC) $(PEVALOBJS:%.o=$(OBJDIR)/%.o) -o $(BINDIR)/peval $(BINDIR)/eval.so $(PEVALLDFLAGS)
+	$(CC) $(PEVALOBJS:%.o=$(OBJDIR)/%.o) -o $(BINDIR)/peval $(PEVALLDFLAGS)
 
 .PHONY: clean
 clean:
-	rm $(OBJDIR)/*.* $(BINDIR)/*.*
+	rm $(OBJDIR)/* $(BINDIR)/*
 
