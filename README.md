@@ -1,12 +1,12 @@
 # Poker equity evaluation library.
 
-**Compile on Linux
+<b>Compile on Linux</b>
 
  * Library:         make -fmakefile.lin lib
  * Evaluation tool: make -fmakefile.lin peval
  * Tests:           make -fmakefile.lin tests
 
-**Compile on Windows
+<b>Compile on Windows</b>
 
  * Library:         make -fmakefile.win dll
  * Evaluation tool: make -fmakefile.win peval
