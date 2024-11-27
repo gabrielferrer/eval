@@ -23,7 +23,7 @@ void main (int argc, char* argv[])
 
 	memset (&evalData, 0, sizeof (struct eval_t));
 
-	while ((opt = getopt (argc, argv, "b:d:")) != -1)
+	while ((opt = getopt (argc, argv, "b:d:h")) != -1)
 	{
 		switch (opt)
 		{
@@ -49,6 +49,7 @@ void main (int argc, char* argv[])
 
 				break;
 
+			case 'h':
 			default:
 				printf ("peval [-b board cards] [-d dead cards] hole cards by player\n");
 				printf ("\n");

@@ -3,7 +3,6 @@
 #include <string.h>
 #include <stdarg.h>
 #include "poker.h"
-#include "enum.h"
 #include "eval.h"
 #include "misc.h"
 #include "fsm.h"

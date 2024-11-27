@@ -87,4 +87,3 @@ peval: $(PEVALOBJS)
 .PHONY: clean
 clean:
 	rm $(OBJDIR)/* $(BINDIR)/*
-

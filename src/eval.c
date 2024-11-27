@@ -9,7 +9,6 @@
 
 #include "core.h"
 #include "eval.h"
-#include "enum.h"
 #include "misc.h"
 #include "fsm.h"
 #include "cmbntn.h"
