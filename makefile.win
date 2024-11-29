@@ -5,12 +5,12 @@ BINDIR=bin
 OBJDIR=obj
 TESTSOBJDIRS="$(OBJDIR)\tests.o" "$(OBJDIR)\eval.o" "$(OBJDIR)\misc.o" "$(OBJDIR)\fsm.o" \
 "$(OBJDIR)\cmbntn.o" "$(OBJDIR)\thrdfnc.o" "$(OBJDIR)\core.o" "$(OBJDIR)\thread.o" \
-"$(OBJDIR)\testing.o"
+"$(OBJDIR)\testing.o" "$(OBJDIR)\status.o"
 COMBSOBJDIRS="$(OBJDIR)\combs.o" "$(OBJDIR)\cmbntn.o"
 DLLOBJSDIRS="$(OBJDIR)\eval.o" "$(OBJDIR)\misc.o" "$(OBJDIR)\fsm.o" "$(OBJDIR)\cmbntn.o" \
 "$(OBJDIR)\thrdfnc.o" "$(OBJDIR)\core.o" "$(OBJDIR)\thread.o"
 PEVALOBJDIRS="$(OBJDIR)\peval.o"
-TESTSOBJS=tests.o eval.o misc.o fsm.o cmbntn.o thrdfnc.o core.o thread.o testing.o
+TESTSOBJS=tests.o eval.o misc.o fsm.o cmbntn.o thrdfnc.o core.o thread.o testing.o status.o
 COMBSOBJS=combs.o cmbntn.o
 DLLOBJS=eval.o misc.o fsm.o cmbntn.o thrdfnc.o core.o thread.o
 PEVALOBJS=peval.o
@@ -62,6 +62,9 @@ core.o:
 
 thread.o:
 	$(CC) $(CFLAGS) -c "$(SRCDIR)\win\thread.c" -o "$(OBJDIR)\thread.o"
+
+status.o:
+	$(CC) $(CFLAGS) -c "$(SRCDIR)\win\status.c" -o "$(OBJDIR)\status.o"
 
 testing.o:
 	$(CC) $(CFLAGS) -c "$(SRCDIR)\testing.c" -o "$(OBJDIR)\testing.o"

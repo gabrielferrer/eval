@@ -2,10 +2,9 @@
 #include <stdarg.h>
 #include <string.h>
 #include "testing.h"
+#include "status.h"
 
 #define SCREEN_COLUMNS 120
-#define PASSED_MSG "PASSED"
-#define FAILED_MSG "FAILED"
 
 void Print (bool passed, char* format, va_list valist)
 {
@@ -20,7 +19,7 @@ void Print (bool passed, char* format, va_list valist)
 		return;
 	}
 
-	printf ("%s%*s\n", buffer, SCREEN_COLUMNS - strlen (buffer), passed ? PASSED_MSG : FAILED_MSG);
+	PrintWithStatus (buffer, passed, SCREEN_COLUMNS);
 }
 
 void PrintInt (int expected, int actual, char* format, ...)
