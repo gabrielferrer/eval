@@ -8,9 +8,6 @@
 #define RED 4
 #define WHITE 15
 
-#define PASSED_MSG "PASSED"
-#define FAILED_MSG "FAILED"
-
 void PrintWithStatus (char* line, bool passed, int length)
 {
 	HANDLE handle = GetStdHandle (STD_OUTPUT_HANDLE);
